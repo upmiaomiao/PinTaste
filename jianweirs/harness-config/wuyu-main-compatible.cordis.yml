@@ -1,0 +1,24 @@
+# Optional: pass only when the main endpoint speaks OpenAI Chat Completions.
+# The specialised selectors/vision/reviewer remain behind the Python MCP tools.
+- id: llm-pi-ai
+  config:
+    providers:
+      wuyu-main:
+        displayName: 无隅主模型
+        api: openai-completions
+        apiKeyEnv: WUYU_MAIN_API_KEY
+        baseURL: !!js process.env.WUYU_MAIN_BASE_URL
+        timeoutMs: !!js "Number(process.env.WUYU_MAIN_TIMEOUT || ((['https://api.deepseek.com/v1','https://api.deepseek.com/v1/'].includes(process.env.WUYU_MAIN_BASE_URL || '') && (process.env.WUYU_MAIN_MODEL || 'deepseek-flash') === 'deepseek-flash') ? '3600' : '120')) * 1000"
+        models:
+          - id: !!js "process.env.WUYU_MAIN_MODEL || 'deepseek-flash'"
+            contextWindow: !!js "process.env.WUYU_MAIN_CONTEXT_WINDOW ? Number(process.env.WUYU_MAIN_CONTEXT_WINDOW) : ((['https://api.deepseek.com/v1','https://api.deepseek.com/v1/'].includes(process.env.WUYU_MAIN_BASE_URL || '') && (process.env.WUYU_MAIN_MODEL || 'deepseek-flash') === 'deepseek-flash') ? 1048576 : undefined)"
+            # Product role boundary: image interpretation stays behind expert tools.
+            input: ['text']
+            maxTokens: !!js "Number(process.env.WUYU_MAIN_MAX_TOKENS || ((['https://api.deepseek.com/v1','https://api.deepseek.com/v1/'].includes(process.env.WUYU_MAIN_BASE_URL || '') && (process.env.WUYU_MAIN_MODEL || 'deepseek-flash') === 'deepseek-flash') ? '393216' : '8192'))"
+        compat:
+          supportsStore: false
+          supportsDeveloperRole: false
+- id: agent-default-model
+  config:
+    provider: wuyu-main
+    model: !!js "process.env.WUYU_MAIN_MODEL || 'deepseek-flash'"

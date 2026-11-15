@@ -1,0 +1,34 @@
+.root { display: inline-flex; align-items: center; gap: 8px; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 14px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 18px;
+  corner-shape: round;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+
+.chip:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }
+.chip:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--dsw-alias-border-l3); }
+.chip:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Switched on: a filled chip with a check, so it reads as "on" at a glance. */
+/* The Wuyu theme maps "success" to grey; the green is the primary button fill (the send button). */
+.chip[aria-pressed="true"] {
+  border-color: var(--dsw-alias-button-primary-fill);
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-foreground);
+}
+.chip[aria-pressed="true"]:hover:not(:disabled) { background: var(--dsw-alias-button-primary-hover); border-color: var(--dsw-alias-button-primary-hover); }
+.check { margin-left: 1px; }

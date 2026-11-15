@@ -1,0 +1,12 @@
+[Unit]
+Description=Hourly Wuyu staging PostgreSQL backup
+
+[Timer]
+OnCalendar=*-*-* *:43:00
+RandomizedDelaySec=120
+AccuracySec=60
+Persistent=true
+Unit=wuyu-staging-pg-backup.service
+
+[Install]
+WantedBy=timers.target

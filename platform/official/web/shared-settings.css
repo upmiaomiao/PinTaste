@@ -1,0 +1,8 @@
+.shared-settings-entry{min-height:100dvh;background:var(--soft,#f8f9fc)}
+.shared-settings-entry>.user-settings-scrim{position:static;min-height:100dvh;padding:0;background:transparent;backdrop-filter:none}
+.shared-settings-entry>.user-settings-scrim>.user-settings-dialog{width:100%;max-width:none;min-height:100dvh;max-height:none;border:0;border-radius:0;box-shadow:none}
+.shared-settings-entry>.user-settings-scrim .user-settings-body{flex:1;min-height:calc(100dvh - 72px)}
+.shared-settings-entry .admin-page{height:100dvh;min-height:0}
+.shared-settings-entry .admin-content{min-width:0}
+.shared-settings-loading{min-height:100dvh;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;padding:24px;color:var(--text,#303740)}
+@media(max-width:620px){.shared-settings-entry>.user-settings-scrim .user-settings-body{min-height:calc(100dvh - 62px)}}

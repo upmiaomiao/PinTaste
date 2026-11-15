@@ -1,0 +1,214 @@
+{
+  "date": "2026-10-10",
+  "all_passed": true,
+  "deployment": {
+    "deployed": true,
+    "health_http": 200,
+    "backup": "/root/Project/wuyu-ai-platform/deployment-backups/expert-voice-20261010-114114",
+    "rollback_image": "wuyu-ai-platform:before-expert-voice-20261010-114114",
+    "database_backup": "/app/runtime/backups/before-expert-voice-20261010-114114.sqlite3",
+    "accounts_passwords_and_all_settings_unchanged": true,
+    "feedback_enabled": true,
+    "frontend_only": true,
+    "source_files": [
+      "official/web/VoiceInput.jsx",
+      "official/web/voice-recorder.mjs",
+      "official/web/expert-feedback.css",
+      "official/test_voice_recorder.mjs",
+      "official/EXPERT_FEEDBACK.md"
+    ]
+  },
+  "final_deployed_state": {
+    "health_http": 200,
+    "all_accounts_passwords_and_settings_unchanged": true,
+    "feedback_enabled": true,
+    "original_question_answer_reasoning_tool_trace_and_all_four_feedback_versions_unchanged": true,
+    "actual_voice_transcript_persisted_and_bound_to_correct_field": true,
+    "voice_ready": true,
+    "document_rag_semantic_ready": true,
+    "deployed_source_hashes_match_local": true
+  },
+  "frontend_build": "passed",
+  "node_recording_tests": {
+    "passed": 8,
+    "failed": 0,
+    "command": "node --test official/test_voice_recorder.mjs"
+  },
+  "browser_checks": {
+    "recording": {
+      "allPassed": true,
+      "syntheticMicrophone": true,
+      "artificialServerReadyDelayMs": 1200,
+      "desktop": {
+        "pane": {
+          "left": 1083.127685546875,
+          "right": 1583.127685546875,
+          "top": 64.87116241455078,
+          "bottom": 1067.3862380981445,
+          "width": 500
+        },
+        "body": {
+          "left": 1084.0048828125,
+          "right": 1583.127685546875,
+          "top": 225.23300170898438,
+          "bottom": 1067.3861999511719,
+          "width": 499.122802734375
+        },
+        "voice": {
+          "left": 1104.002197265625,
+          "right": 1553.0427551269531,
+          "top": 728.6458129882812,
+          "bottom": 833.8815612792969,
+          "width": 449.0405578613281
+        },
+        "bodyClientWidth": 489,
+        "bodyScrollWidth": 489,
+        "documentClientWidth": 1600,
+        "documentScrollWidth": 1600,
+        "bodyScrollLeft": 0,
+        "fonts": {
+          "title": "20px",
+          "hint": "15px",
+          "label": "15px",
+          "textarea": "16px",
+          "status": "16px",
+          "statusHint": "15px"
+        },
+        "position": "static"
+      },
+      "recording": {
+        "capturedFrames": 228,
+        "sentFrames": 228,
+        "capturedBytes": 291242,
+        "sentBytes": 291242,
+        "framesIdenticalAndOrdered": true,
+        "firstCaptureAt": 327117.59999996424,
+        "firstSpeechAt": 327117.59999996424,
+        "cueAt": 327724.7999999523,
+        "readyAt": 328331.6999999881,
+        "firstSendAt": 328331.7999999523,
+        "endAfterLastFrame": true,
+        "contextState": "closed",
+        "allTracksStopped": true,
+        "result": {
+          "text": "第三步存在逻辑跳跃，缺少依据。建议补充原文证据，并核对数值和单位。",
+          "call_id": "e8dde4f3adf146028b4ed40bff39906d",
+          "seconds": 9.101
+        },
+        "phases": [
+          {
+            "phase": "preparing",
+            "at": 326118.5,
+            "text": "正在准备录音…\n\n正在准备录音，请等到“可以开始说话”后开口。"
+          },
+          {
+            "phase": "recording",
+            "at": 327724.7999999523,
+            "text": "可以开始说话 · 0s\n完成录音\n\n正在录音，点击“完成录音”后核对文字再保存。"
+          },
+          {
+            "phase": "finishing",
+            "at": 336181.39999997616,
+            "text": "正在转写…\n\n正在识别录音，文字会填入输入框，核对后保存。"
+          }
+        ]
+      },
+      "transcriptAppendedToCorrectField": true,
+      "feedbackSaved": false
+    },
+    "cancel_during_preparation": {
+      "allPassed": true,
+      "cancelDuringMicrophonePreparation": true,
+      "lateAcquiredMicrophoneReleased": true,
+      "noReadyCueOrUploadAfterCancel": true,
+      "formEnabledAfterCancel": true
+    },
+    "mobile_520": {
+      "allPassed": true,
+      "viewportWidth": 520,
+      "geometry": {
+        "pane": {
+          "left": 26.87774085998535,
+          "right": 513.3018131256104,
+          "top": 58.874725341796875,
+          "bottom": 913.3017883300781,
+          "width": 486.424072265625
+        },
+        "body": {
+          "left": 27.754934310913086,
+          "right": 513.3018093109131,
+          "top": 210.2384796142578,
+          "bottom": 913.3017730712891,
+          "width": 485.546875
+        },
+        "voice": {
+          "left": 43.75,
+          "right": 487.2190246582031,
+          "top": 588.6787109375,
+          "bottom": 693.9144592285156,
+          "width": 443.4690246582031
+        },
+        "role": "dialog",
+        "bodyClientWidth": 475,
+        "bodyScrollWidth": 475,
+        "documentClientWidth": 520,
+        "documentScrollWidth": 520,
+        "bodyScrollLeft": 0,
+        "textareaFont": "16px",
+        "statusFont": "16px"
+      },
+      "microphoneReleasedAfterCancel": true,
+      "formEnabledAfterCancel": true
+    },
+    "mobile_360": {
+      "allPassed": true,
+      "viewportWidth": 360,
+      "geometry": {
+        "pane": {
+          "left": 26.87774085998535,
+          "right": 353.214075088501,
+          "top": 58.874725341796875,
+          "bottom": 893.1263732910156,
+          "width": 326.3363342285156
+        },
+        "body": {
+          "left": 27.754934310913086,
+          "right": 353.21410179138184,
+          "top": 210.2384796142578,
+          "bottom": 893.1263580322266,
+          "width": 325.45916748046875
+        },
+        "voice": {
+          "left": 43.75,
+          "right": 327.1313171386719,
+          "top": 588.7404174804688,
+          "bottom": 751.4734191894531,
+          "width": 283.3813171386719
+        },
+        "role": "dialog",
+        "bodyClientWidth": 315,
+        "bodyScrollWidth": 315,
+        "documentClientWidth": 360,
+        "documentScrollWidth": 360,
+        "bodyScrollLeft": 0,
+        "textareaFont": "16px",
+        "statusFont": "16px"
+      },
+      "microphoneReleasedAfterCancel": true,
+      "formEnabledAfterCancel": true
+    },
+    "ordinary_question_voice": {
+      "allPassed": true,
+      "normalQuestionVoiceLayoutPreserved": true,
+      "cancelReleasesMicrophone": true,
+      "questionDraftUnchanged": true
+    }
+  },
+  "console": "Only expected /api/me 401 before login; no application errors.",
+  "screenshots": [
+    "../output/playwright/expert-voice-desktop.png",
+    "../output/playwright/expert-voice-mobile-520.png",
+    "../output/playwright/expert-voice-mobile-360.png"
+  ],
+  "verification_notes": "Isolated browser used a synthetic microphone fixture. No physical microphone used; no new expert opinion version saved. Artificial voice handshake delay was 1.2 seconds."
+}

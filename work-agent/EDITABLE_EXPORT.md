@@ -1,0 +1,7 @@
+# Editable export after image delivery
+
+Image-first delivery retains reviewed page images and an image-based PPTX. A later explicit request for editable output uses the existing export action with format editable_pptx, the latest workflow revision and one stable request ID. start_tracing applies to the existing editable workflow's actual tracing phase; it does not switch an already delivered image deck into editable mode. rebuild:true is for validated existing native-export rebuilds, not first conversion.
+
+The read-only conversation.editable_conversion hint is exposed only for a non-paused image workflow at ready_to_export/exported with the backend's reviewed-image capability and no active job or current failure. Reading does not choose the format, approve cost, authorize work or change requirements. Status queries still have no required action. Actual conversion keeps all backend ownership, revision, review, quota and worker checks. Rejected tracing returns a conditional recovery instruction instead of advising another approval of the same images.
+
+The deployed dist files are the current source of record for this private application; its authoring src tree is absent. Update these exact versioned files and validate through the real MCP SDK. Do not rebuild an older authoring tree or silently translate one paid action into another. Focused tests use self-created snapshots and stub only the external backend transport. This fix does not execute a live conversion or guarantee a model's native reconstruction quality.

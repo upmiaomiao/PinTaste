@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-11-07-ppt-requirements-delivery-recovery.md
+2026-11-07-ppt-requirements-delivery-recovery.md: eb7d4c04b8bf4e0394dfcace540d54c6ade956e5
+2026-11-07-ppt-requirements-delivery-recovery.zh.md: 92c16fed27a81caf34f2bca062bd40a8a9120262

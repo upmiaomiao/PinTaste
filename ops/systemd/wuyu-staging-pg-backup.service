@@ -1,0 +1,26 @@
+[Unit]
+Description=Wuyu staging PostgreSQL private logical backup
+Requires=docker.service
+After=docker.service
+ConditionPathIsRegular=/opt/wuyu-staging/state/pg-backup171/config.json
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/bin/python3 -B /opt/wuyu-staging/source/ops/staging_pg_backup.py --config /opt/wuyu-staging/state/pg-backup171/config.json backup
+UMask=0077
+TimeoutStartSec=900
+MemoryMax=128000000
+MemorySwapMax=0
+TasksMax=128
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateNetwork=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/wuyu-staging/backups/postgres
+RestrictAddressFamilies=AF_UNIX
+StandardOutput=journal
+StandardError=journal
+Restart=no

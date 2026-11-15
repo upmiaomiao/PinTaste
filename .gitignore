@@ -1,0 +1,34 @@
+**/node_modules/
+**/__pycache__/
+**/.pytest_cache/
+**/.venv/
+**/instance/
+**/.env*
+**/.credentials*
+**/*.key
+**/*.pem
+**/*.log
+**/*.cmd
+**/*.pyc
+
+# Private configuration, credentials and business/runtime state
+**/.env
+**/.env.*
+**/.private/
+**/private/
+**/.ssh/
+**/*.p12
+**/*.pfx
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+**/*.dump
+**/*.sql.gz
+**/backups/
+**/.DS_Store
+
+# Generated build environments and obsolete backup copies
+**/.dsh-build/
+**/*.bak
+**/*.bak-*
+**/*.bak[0-9]*

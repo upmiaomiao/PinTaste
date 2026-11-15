@@ -1,0 +1,5 @@
+-r ../requirements.txt
+Pillow>=11,<13
+jsonschema>=4.23,<5
+websockets>=15,<16
+PyMuPDF>=1.26,<2

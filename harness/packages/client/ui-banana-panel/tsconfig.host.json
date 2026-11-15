@@ -1,0 +1,12 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "lib/types", "tsBuildInfoFile": "lib/tsconfig.host.tsbuildinfo" },
+  "files": ["src/index.ts", "src/material-context.ts", "src/text-quota.ts", "src/client/locales.ts", "src/presentation-config.ts", "src/presentation-config-http.ts", "src/presentation-requirements.ts", "src/presentation-requirements-host.ts", "src/presentation-confirmation-source.ts"],
+  "references": [
+    { "path": "../../../vendor/cordis" }, { "path": "../../core/agent" },
+    { "path": "../../core/tools" }, { "path": "../../core/session" },
+    { "path": "../../llm/llm" }, { "path": "../../host/webserver" },
+    { "path": "../connection/tsconfig.host.json" },
+    { "path": "../../api/session-controller/tsconfig.host.json" }
+  ]
+}

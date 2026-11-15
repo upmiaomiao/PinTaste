@@ -1,0 +1,3 @@
+# Bilingual-pair consistency record: git blob hashes of synchronized content.
+README.md: 3e10ab06b1ef13f84f0c9011719ebf4b130dad19
+README.zh.md: 2ef43088a81b2fb2af727346afb55c4c724f6de2

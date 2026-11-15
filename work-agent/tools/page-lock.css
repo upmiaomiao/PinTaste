@@ -1,0 +1,4 @@
+.wuyu-lock-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+.wuyu-lock-toolbar small{flex:1 1 220px;color:var(--muted,#5b6472)}
+.wuyu-lock-toggle.locked{background:#fff4d6;border-color:#d39b00;color:#6b4a00}
+.wuyu-lock-chip{display:inline-block;margin-left:6px;padding:0 6px;border-radius:8px;background:#fff4d6;color:#6b4a00;font-style:normal;font-size:12px}

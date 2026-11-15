@@ -1,0 +1,27 @@
+/** Shared API/account errors; generated and user-authored content is never translated. */
+export default {
+ '无上限':'Unlimited',
+ '个人每日赠额（留空跟随全局，0为不赠送，-1为不限额度）':'Personal daily allowance (blank: global, 0: none, -1: unlimited)',
+ '账号已更改，请刷新页面后再修改设置。':'Your signed-in account has changed. Reload before changing settings.',
+ 'ACCOUNT_CHANGED':'Your signed-in account has changed. Reload before changing settings.',
+ '请先登录。':'Please sign in first.',
+ '登录状态已失效，请重新登录。':'Your session has expired. Please sign in again.',
+ '账号或密码错误，或账号暂不可用。':'Incorrect account or password, or the account is unavailable.',
+ '邮箱或密码错误，或账号暂不可用。':'Incorrect email or password, or the account is unavailable.',
+ '请输入有效邮箱。':'Enter a valid email address.',
+ '密码需为 8–128 个字符。':'The password must contain 8–128 characters.',
+ '操作过于频繁，请稍后重试。':'Too many attempts. Please try again later.',
+ '暂未开放新用户注册。':'Registration is currently closed.',
+ '该邮箱已注册，请直接登录。':'This email is already registered. Please sign in.',
+ '请填写姓名、机构并选择身份。':'Enter your name and organization, then select your affiliation.',
+ '账号暂不可用。':'This account is currently unavailable.',
+ 'INVALID_CREDENTIALS':'Incorrect account or password.',
+ 'IDENTITY_DISABLED':'This account is currently unavailable.',
+ '统一身份服务暂不可用或权限已失效。':'The account service is unavailable or access has expired.',
+ '统一账号权限校验未通过。':'Account access could not be verified.',
+ '导出文件不存在。':'The export file was not found.',
+ '导出文件已过期，请重新导出。':'The export has expired. Please create a new export.',
+ '配置已保存。':'Settings saved.',
+ '偏好自动保存至当前账号':'Preferences are saved to this account automatically',
+ '界面语言':'Interface language'
+};

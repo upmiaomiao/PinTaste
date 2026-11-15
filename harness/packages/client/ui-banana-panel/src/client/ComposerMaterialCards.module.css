@@ -1,0 +1,10 @@
+.materials { min-width:0; margin:6px 4px 12px; }
+.remaining { margin:6px 3px 0; font-size:12px; color:var(--dsw-alias-label-secondary); }
+.cards { display:flex; flex-wrap:wrap; gap:10px; max-height:180px; overflow:auto; padding:3px; }
+.card { display:flex; align-items:center; gap:10px; box-sizing:border-box; min-width:0; width:min(300px,100%); padding:12px; border:0.5px solid var(--dsw-alias-border-l2); border-radius:14px; background:var(--dsw-alias-bg-base); color:var(--dsw-alias-label-tertiary); }
+.card > svg { flex:none; }.card > div { min-width:0; flex:1; }.card strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--dsw-alias-label-primary); font-size:14px; font-weight:500; line-height:22px; }.card small { display:block; color:var(--dsw-alias-label-secondary); font-size:12px; line-height:20px; }
+.card button { border:0; background:transparent; color:var(--dsw-alias-label-secondary); width:28px;height:28px; font:inherit;font-size:20px;cursor:pointer; }
+.confirmation { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:10px 3px 0; color:var(--dsw-alias-label-secondary); font-size:12px; line-height:20px; }
+.confirmation button { flex:none; padding:7px 14px; border:0; border-radius:20px;corner-shape:round; background:var(--dsw-alias-button-primary-fill);color:var(--dsw-alias-label-primary-foreground);font:inherit;font-size:13px;line-height:22px;cursor:pointer; }
+.confirmation button:disabled { opacity:.5;cursor:wait; }.card button:focus-visible,.confirmation button:focus-visible { outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px; }
+@media(max-width:460px) { .cards { max-height:150px; }.card { width:100%;padding:10px; }.confirmation { align-items:flex-start;flex-direction:column; }.confirmation button { align-self:flex-end; } }

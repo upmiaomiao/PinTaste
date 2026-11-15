@@ -1,0 +1,21 @@
+[Unit]
+Description=Wuyu Jianwei independent science and Esri worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/wuyu-jianweirs/current
+Environment=PYTHONUTF8=1
+ExecStart=/opt/wuyu-jianweirs/current/.venv/bin/python /opt/wuyu-jianweirs/current/scripts/deploy/jianweirs_science_server.py --env-file /opt/wuyu-jianweirs/shared/science.env --output-dir /opt/wuyu-jianweirs/shared/science --port 8171
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/wuyu-jianweirs/shared
+
+[Install]
+WantedBy=multi-user.target

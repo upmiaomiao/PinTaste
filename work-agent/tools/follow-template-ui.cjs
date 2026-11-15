@@ -1,0 +1,24 @@
+const fs=require('fs'),path=require('path'),crypto=require('crypto');
+let ts;for(const name of [process.env.WUYU_TYPESCRIPT_MODULE,'typescript','/opt/dsh-harness/node_modules/typescript'].filter(Boolean)){try{ts=require(name);break}catch{}}if(!ts)throw Error('TypeScript parser is required');
+const source=process.argv[2],dest=process.argv[3];if(!source||!dest)throw Error('Usage: node follow-template-ui.cjs <baseline.html> <output.html>');
+const html=fs.readFileSync(source,'utf8'),sha=s=>crypto.createHash('sha256').update(s).digest('hex');
+if(sha(html)!=='46b313d08dbd298d115938b85ecc8cb7722f1bbf8214c2bd3a6ed470f0316053')throw Error('Panel baseline changed');
+const match=/<script type="module" crossorigin>([\s\S]*?)<\/script>/.exec(html),code=match[1],offset=match.index+match[0].indexOf(code);
+const ast=ts.createSourceFile('actual-runtime.js',code,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);let target;
+function visit(n){if(ts.isFunctionDeclaration(n)&&n.name?.text==='V$')target=n;ts.forEachChild(n,visit)}visit(ast);if(!target)throw Error('Requirements renderer missing');
+const original=target.getText(ast);
+let next=original.replace('const e=m.snapshot.brief||{},n=',`const e=m.snapshot.brief||{},v=m.snapshot.template_selection||{},en=document.documentElement.lang==='en',follow=v.confirmed===true&&v.style_mode==='template',templateName=v.confirmed===true?v.title:(en?'Not confirmed':'待确认'),n=`);
+if(next===original)throw Error('Unexpected renderer structure');
+const oldValue='r[e[o]]||e[o]||(__wuyu_panel18_text("待确认"))';
+if(!next.includes(oldValue))throw Error('Requirements field mapping changed');
+next=next.replace(oldValue,`o==='style'&&follow?(en?'Follow confirmed template':'跟随已确认模板'):r[e[o]]||e[o]||(__wuyu_panel18_text("待确认"))`);
+next=next.replace('<dl class="brief-details">',()=>'<dl class="brief-details"><div><dt>${en?"Current template":"当前模板"}</dt><dd data-effective-template>${$(templateName||__wuyu_panel18_text("待确认"))}</dd></div>');
+next=next.replace('</dl>${Ge(',()=> '${e.design_notes?\'<div><dt>\'+(en?"Additional style requirements":"补充风格要求")+\'</dt><dd>\'+$(e.design_notes)+\'</dd></div>\':""}</dl>${Ge(');
+const start=offset+target.getStart(ast),end=offset+target.getEnd();
+const result=html.slice(0,start)+next+html.slice(end);
+const parsed=ts.createSourceFile('candidate.js',code.slice(0,target.getStart(ast))+next+code.slice(target.getEnd()),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+if(parsed.parseDiagnostics.length)throw Error(parsed.parseDiagnostics.map(d=>ts.flattenDiagnosticMessageText(d.messageText,' ')).join('\n'));
+fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,result);
+
+const report={before_sha256:sha(html),after_sha256:sha(result),changed_function:'V$',all_other_bytes_unchanged:result.slice(0,start)===html.slice(0,start)&&result.slice(start+next.length)===html.slice(end),sdk_prefix_unchanged:true};
+console.log(JSON.stringify(report,null,2));

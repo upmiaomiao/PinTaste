@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-10",
+  "all_required_checks_passed": true,
+  "deployment": {
+    "deployed": true,
+    "health_http": 200,
+    "backup": "/root/Project/wuyu-ai-platform/deployment-backups/expert-feedback-20261010-104843",
+    "rollback_image": "wuyu-ai-platform:before-expert-feedback-20261010-104843",
+    "database_backup": "/app/runtime/backups/before-expert-feedback-20261010-104843.sqlite3",
+    "accounts_and_passwords_unchanged": true,
+    "previous_settings_unchanged": true,
+    "rag": {
+      "enabled": true,
+      "semantic_ready": true,
+      "model_label": "WeMM-Embedding-2B",
+      "visual_enabled": true
+    }
+  },
+  "live_api_verification": {
+    "all_passed": true,
+    "initial_feedback_enabled": false,
+    "conversation_id": "980cdccf52304707a23575b313f3925a",
+    "job_id": "f91a8dc8791346f886cddd20f7a62388",
+    "model_reasoning_characters": 1596,
+    "model_tool_calls": 1,
+    "trace_events": 75,
+    "speech": {
+      "text": "第三步存在逻辑跳跃，缺少依据。建议补充原文证据，并核对数值和单位。",
+      "seconds": 9.185,
+      "call_id": "8239ff5054da4c25bd17ee81f755d12e"
+    },
+    "feedback_versions": 2,
+    "rule_versions": [
+      3,
+      4
+    ],
+    "complete_export_verified": true,
+    "restored_feedback_enabled": false,
+    "accounts_passwords_and_previous_settings_unchanged": true
+  },
+  "final_deployed_state": {
+    "health_http": 200,
+    "feedback_enabled": false,
+    "accounts_passwords_and_previous_settings_unchanged": true,
+    "original_turn_unchanged_across_all_feedback_versions": true,
+    "feedback_versions": 3,
+    "voice_ready": true,
+    "document_rag_semantic_ready": true,
+    "primary_model": "wuyu-shensi-base",
+    "trace_events": 75
+  },
+  "automated_checks": {
+    "new_expert_feedback_tests": {
+      "passed": 8,
+      "log": "../../tmp/expert-unit-tests.log"
+    },
+    "core_agent_tools_context_tests": {
+      "passed": 54,
+      "log": "../../tmp/expert-core-tests.log"
+    },
+    "platform_initial_regression": {
+      "passed": 68,
+      "resolved_failed_targets": [
+        "Corrected the test module argument from test_model_profiles to test_models.",
+        "Disabled RAG in the native-image capability guard fixture, since OCR/RAG now accepts images for text models."
+      ],
+      "log": "../../tmp/expert-regression-tests.log"
+    },
+    "additional_regressions_and_resolved_targets": {
+      "passed": 13,
+      "log": "../../tmp/expert-additional-regressions.log"
+    },
+    "frontend_vite_build": "passed",
+    "container_real_startup_and_health": "passed"
+  },
+  "ui_verification": {
+    "isolated_browser": "Playwright CLI; built-in CUA runtime could not start",
+    "default_off_hides_chat_feedback": true,
+    "admin_switch_save_updates_chat": true,
+    "voice_input_controls_present": true,
+    "real_asr_verified_using_synthetic_audio": true,
+    "ui_saved_third_feedback_revision": true,
+    "all_three_original_transcripts_preserved_in_ui_download": true,
+    "per_round_trace_view": true,
+    "ui_download_while_feedback_off": true,
+    "restored_default_off": true,
+    "admin_test_session_logged_out": true,
+    "screenshots": [
+      "../output/playwright/expert-feedback-ui-proof.png",
+      "../output/playwright/expert-feedback-admin-proof.png",
+      "../output/playwright/expert-feedback-disabled-proof.png"
+    ]
+  },
+  "downloaded_sample": {
+    "path": "../output/playwright/expert-feedback-export-sample.json",
+    "schema": "wuyu-user-data",
+    "version": 2,
+    "feedback_revisions": [
+      1,
+      2,
+      3
+    ],
+    "bytes": 140759,
+    "sha256": "1e7fea148c2a31218c89215b6c578540fc44a45479724a64038bf72ce74b6099"
+  },
+  "recording_limits": [
+    "Only reasoning actually returned by the model is archived.",
+    "Historical turns without execution events are marked legacy_partial.",
+    "Raw microphone audio is not saved."
+  ]
+}

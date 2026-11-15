@@ -1,0 +1,476 @@
+无隅|||Wuyu
+用途|||Purpose
+页面角色|||Slide role
+视觉特征|||Visual style
+版式结构|||Layout structure
+信息密度|||Information density
+行业主题|||Industry topic
+逐页审核|||Review each slide
+样张确认后自动整稿|||Complete the deck after sample approval
+样张 + 一次整稿审核|||Samples and one full-deck review
+可续跑|||Can be resumed
+排队中|||Queued
+等待中|||Waiting
+处理中|||Processing
+已就绪|||Ready
+已完成|||Completed
+失败|||Failed
+已取消|||Cancelled
+已暂停|||Paused
+待生成|||Not generated
+已解析|||Parsed
+已上传|||Uploaded
+解析中|||Parsing
+操作未完成|||Operation incomplete
+操作未完成，请刷新状态后重试；连接详情请在原后台检查。|||Operation incomplete. Refresh the status and try again; check connection details in the original administration page.
+第|||Slide 
+页|||
+尚未生成页面图片|||No slide image generated yet
+图片加载中；不可见时可刷新|||Loading image; refresh if it does not appear
+连接失败，请刷新重试|||Connection failed. Refresh and try again
+关于|||About 
+未能放入对话|||Could not insert into the conversation
+意见已放入左侧输入框，请确认后发送。|||Your feedback is in the chat input on the left. Check it before sending.
+未能把意见放入对话，请保留文字并在左侧发送。|||Could not insert the feedback. Keep a copy and send it in the chat on the left.
+正在读取真实参考库…|||Loading the reference library…
+参考库暂不可用，可在对话中重试。|||The reference library is temporarily unavailable. You can retry from the chat.
+全部|||All
+项来源||| sources
+页 · 查看图文||| slides · View text and images
+没有匹配来源，可调整关键词。|||No matching sources. Try different keywords.
+把此模板参考放入对话|||Discuss this reference in chat
+全新绘制的中性布局；占位内容不作为项目事实。|||A newly drawn neutral layout. Placeholder content is not project evidence.
+来源文字与OCR未经人工核对；事实不自动进入项目证据。|||Source text and OCR have not been manually verified. Their claims are not automatically treated as project evidence.
+参考页面|||Reference slide
+模板参考：|||Template reference: 
+无法连接原会话，请在左侧重新打开项目详情。|||Cannot connect to the original conversation. Reopen project details from the chat on the left.
+需求|||Requirements
+材料|||Materials
+资料调研|||Research
+模板|||Templates
+大纲|||Outline
+前两页试看|||Two-slide preview
+页面|||Slides
+可编辑预览|||Editable preview
+版本记录|||Version history
+导出文件|||Exports
+正在阅读材料|||Reading materials
+等待对话确认阅读草稿|||Waiting for draft approval in chat
+正在确认需求|||Confirming requirements
+正在准备样张|||Preparing sample slides
+大纲已就绪|||Outline ready
+等待对话确认样张|||Waiting for sample approval in chat
+正在生成页面|||Generating slides
+等待对话审核当前页|||Waiting for slide review in chat
+等待对话审核整稿|||Waiting for deck review in chat
+正在描摹|||Creating editable objects
+正在检查文件|||Checking files
+正在导出|||Exporting
+文件准备就绪|||Files ready
+已完成交付|||Delivered
+新建演示文稿|||New presentation
+处理未完成，请检查服务设置后重试；已完成内容保留。|||Processing was not completed. Check the service settings and retry. Completed content is retained.
+额度不足，后续工作已停止|||Insufficient credits; further work has stopped
+网络中断，已保留上次详情|||Connection interrupted; the last details are retained
+制作已暂停|||Generation paused
+已交付混合可编辑版，|||A mixed editable deck is available; 
+页保留图片，可单页重试||| slides remain as images and can be retried individually
+已可下载|||Ready to download
+处理未完成，请在对话中处理|||Processing incomplete. Continue in chat
+正在阅读材料并整理详细草稿|||Reading materials and preparing a detailed draft
+正在修订阅读草稿|||Revising the reading draft
+正在解析材料|||Parsing materials
+正在生成大纲|||Generating outline
+正在制作样张|||Generating sample slides
+正在修订样张|||Revising sample slides
+正在按要求生成|||Generating the requested content
+正在修订页面|||Revising slides
+正在描摹页面|||Creating editable slide objects
+正在导出文件|||Exporting files
+项目正在处理|||Project in progress
+详细阅读草稿已完成，等待对话选择下一步|||Detailed reading draft complete. Choose the next step in chat
+阅读草稿尚不完整，请在对话中处理|||The reading draft is incomplete. Resolve it in chat
+图片已生成，可预览和下载|||Images generated; preview and download available
+等待按要求生成|||Waiting to generate the requested content
+等待确认需求|||Waiting for requirement confirmation
+等待制作样张|||Waiting to generate sample slides
+等待继续生成页面|||Waiting to continue slide generation
+等待描摹页面|||Waiting to create editable objects
+等待检查文件|||Waiting to check files
+等待导出文件|||Waiting to export files
+处理未完成，请在对话中重试|||Processing incomplete. Retry in chat
+制作进度与确认请查看左侧对话|||See the chat on the left for progress and confirmations
+在对话中提出意见|||Give feedback in chat
+阅读草稿与大纲|||Reading draft and outline
+场景|||Scenario
+具体用途|||Use case
+主题|||Topic
+听众|||Audience
+希望达成的目标|||Goal
+页数|||Slide count
+汇报时长|||Presentation duration
+风格|||Style
+审核方式|||Review method
+科研汇报|||Research presentation
+商业汇报|||Business presentation
+基金与项目申报|||Grant and project applications
+学位与开题|||Thesis and proposal presentations
+论文与组会|||Paper discussions and lab meetings
+人才项目|||Talent programs
+科技奖励|||Science and technology awards
+科研进展|||Research progress
+商业计划|||Business plan
+技术方案|||Technical proposal
+产品介绍|||Product introduction
+市场产业调研|||Market and industry research
+项目汇报|||Project report
+投标客户方案|||Bid and client proposals
+需求由左侧对话逐步确认。这里展示当前已保存内容。|||Requirements are confirmed in the chat on the left. This page shows the saved version.
+待确认|||To be confirmed
+把需求调整意见放入对话|||Discuss requirement changes in chat
+在左侧对话上传资料。下面展示实际解析状态与可用证据。|||Upload materials in the chat on the left. Actual parsing status and available evidence are shown below.
+本次大纲只使用了部分材料，请结合大纲中的覆盖说明检查遗漏内容。|||This outline uses only part of the materials. Check its coverage notes for omissions.
+项目资料|||Project materials
+还没有项目资料|||No project materials yet
+可以在左侧上传PDF、Word、PPT、表格或图片。|||Upload PDFs, Word files, presentations, spreadsheets, or images in the chat on the left.
+对材料与证据提出问题|||Ask about materials and evidence
+等待阅读已确认的材料|||Waiting to read the confirmed materials
+详细阅读草稿已生成|||Detailed reading draft generated
+材料阅读尚不完整|||Material reading is incomplete
+当前阅读草稿已确认|||Current reading draft approved
+详细阅读草稿（Markdown）|||Detailed reading draft (Markdown)
+阅读证据索引（JSON）|||Reading evidence index (JSON)
+阅读覆盖核查报告（JSON）|||Reading coverage report (JSON)
+详细阅读草稿|||Detailed reading draft
+处原文定位 ·||| source locations ·
+份上传材料 · 本次选用||| uploaded materials · Selected: 
+份||| materials
+上传原文与网络补充资料分开标注来源；网页片段与读取不完整内容不代表全文已核对。修改草稿、下载或继续制作请在左侧对话选择。|||Uploaded sources and online supplementary material are identified separately. Web excerpts and partial reads do not mean the full text was checked. Use the chat on the left to revise, download, or continue.
+阅读状态待更新|||Reading status pending
+· 并行阅读|||· Parallel readers: 
+份材料经明确选择本次不使用，原件仍保留；当前完整性只指选用范围，不代表全部上传材料均已读完。||| materials were explicitly excluded for this run; originals are retained. Completeness refers only to the selected scope, not every uploaded material.
+已按你的选择仅使用核对过的内容；未读部分继续标注并保留原件。|||Only verified content is used as you selected. Unread portions remain marked, and originals are retained.
+部分材料尚未纳入。你可以补充材料，或明确选择仅按已读内容继续。|||Some materials are not yet included. Add materials or explicitly choose to continue using only the content already read.
+逐页内容计划尚未通过检查，请先重新整理内容计划。|||The slide content plan has not passed validation. Revise it first.
+材料覆盖尚未完整，不能开始生图；请根据覆盖核查报告补充或修订。|||Material coverage is incomplete, so image generation cannot start. Use the coverage report to supplement or revise the plan.
+阅读草稿|||Reading draft
+在对话中修改阅读草稿|||Revise the reading draft in chat
+生图前请核对每页文字、原文依据与参考原图；修改请在左侧对话说明。|||Before image generation, check each slide's text, evidence, and source images. Request changes in the chat on the left.
+大纲尚未生成|||No outline yet
+材料阅读完成后，会在这里展示完整逐页内容与参考图片。|||After material reading, the complete slide content and reference images will appear here.
+这是正式第1页和首个正文页的试看效果。满意后直接复用当前图片，只生成其余页；不满意可在左侧对话修改或更换模板。|||These are previews of the actual first slide and first content slide. Approved images are reused while the remaining slides are generated. Request revisions or a different template in the chat on the left.
+模板 v|||Template v
+· 试看 v|||· Preview v
+第2页 · 首个正文|||Slide 2 · First content slide
+第1页 · 封面|||Slide 1 · Cover
+第2页正文试看|||Slide 2 content preview
+第1页封面试看|||Slide 1 cover preview
+等待实际生成|||Waiting for generation
+尚无两页试看|||No two-slide preview yet
+前两张正式页面生成完成后会显示在这里。|||The first two actual slides will appear here once generated.
+前两页试看（模板v|||Two-slide preview (template v
+、样张v|||, sample v
+修改或更换模板|||Revise or change the template
+页面尚未生成|||No slides generated yet
+在左侧说明所需内容并发送，即可生成指定页面或素材。|||Describe and send your request in the chat on the left to generate the required slides or asset.
+在对话中确认当前样张后，会按所选审核方式继续。|||After you approve the current samples in chat, work continues according to the selected review method.
+选择预览页面|||Choose a slide to preview
+查看第|||View slide 
+等待生成|||Waiting for generation
+已生成|||Generated
+已通过|||Approved
+待对话审核|||Awaiting review in chat
+页（当前图片v||| (current image v
+把本页修改意见放入对话|||Discuss revisions to this slide in chat
+已按本次生成请求制作；可在左侧直接说明要修改的内容。|||Generated for this request. Describe any changes in the chat on the left.
+当前页通过后才会继续下一页，请在左侧对话确认。|||The next slide starts after you approve this one in the chat on the left.
+当前审核方式：|||Current review method: 
+页 · 描摹v||| · Editable reconstruction v
+个可编辑对象。视觉一致性须以实际文件检查为准。||| editable objects. Visual fidelity must be checked in the actual file.
+查看对象文字与类型|||View object text and types
+页实际描摹预览||| editable reconstruction preview
+描摹来源图|||Source image for reconstruction
+实际描摹预览|||Actual reconstruction preview
+来源页图；服务端尚未提供对象渲染预览|||Source slide image; no rendered object preview is available yet
+对象|||Object
+尚无描摹结果|||No editable reconstruction yet
+全部图像满足审核条件后，系统才会描摹和检查可编辑文件。|||Editable reconstruction and file checks begin only after all images meet the review requirements.
+需求更新|||Requirements updated
+参考调整|||References updated
+大纲生成|||Outline generated
+大纲修改|||Outline revised
+样张生成|||Samples generated
+样张修订|||Samples revised
+样张确认|||Samples approved
+页面审核|||Slide reviewed
+页面修订|||Slide revised
+文件导出|||File exported
+暂停制作|||Pause generation
+继续制作|||Continue generation
+取消任务|||Cancel task
+项目记录|||Project record
+尚无版本记录|||No version history yet
+修改与生成记录将保留在原项目中。|||Revision and generation records remain in the original project.
+图片中的文字与图形不可编辑|||Text and graphics inside images are not editable
+下载图片 ↗|||Download image ↗
+可编辑 PPTX|||Editable PPTX
+图片版 PPTX（不可编辑）|||Image-based PPTX (not editable)
+PDF 文档|||PDF document
+整套页面图片|||All slide images
+来源清单|||Source list
+混合 PPTX|||Mixed PPTX
+下载文件 ↗|||Download file ↗
+下载地址暂不可用|||Download link temporarily unavailable
+图片版保留整页设计，页内文字与图形不可编辑；混合版保留已通过页面的可编辑对象，其余页使用确认图片。|||The image-based deck preserves the full-slide design without editable text or graphics. The mixed deck keeps approved editable objects and uses confirmed images for other slides.
+当前图片|||Current images
+页保留已确认图片；图片页中的文字和图形不可编辑，可在左侧指定页码单独重试描摹。||| slides retain confirmed images. Their text and graphics are not editable; specify slide numbers in chat to retry reconstruction individually.
+本次导出的所有页面均有可编辑对象。|||All slides in this export contain editable objects.
+后台仍会保留后续成功的描摹结果。|||Later successful reconstruction results will also be retained.
+当前页图已可导出图片版 PPTX；描摹失败也不会删除图片版。|||The current images can already be exported as an image-based PPTX. Reconstruction failure will not delete that version.
+当前版本文件|||Current version files
+当前版本暂无导出文件|||No exports for the current version yet
+图片版正在准备，也可在左侧说“先导出图片版 PPTX”。|||The image-based version is being prepared. You can also request it first in the chat on the left.
+当前页图完成并满足所选审核方式后，即可先导出图片版 PPTX，无需等描摹完成。|||Once the images meet the selected review requirements, an image-based PPTX can be exported without waiting for editable reconstruction.
+往期导出文件（保留旧版本）|||Earlier exports (previous versions retained)
+在对话中提出导出需求|||Request an export in chat
+无隅 AI · 工作|||Wuyu AI · Work
+刷新详情|||Refresh details
+页 ·||| slides ·
+项目详情|||Project details
+在左侧对话中提出需求与修改；这里选择模板、查看页面与文件。|||Send requirements and revision requests in the chat on the left. Choose templates and view slides and files here.
+未连接|||Disconnected
+测试数据 · 非生产模型|||Test data · Not a production model
+PPT 预览|||PPT preview
+按要求直接生成|||Generate the requested content
+本轮处理未完成|||This attempt was not completed
+图片版可先下载；可编辑版需修订当前页描摹后继续。|||Download the image-based version first. The editable version requires revisions to the current reconstruction.
+请等待每日额度刷新或联系管理员加额；已完成的文件仍可下载。|||Wait for the daily credit reset or ask an administrator for more credits. Completed files remain available to download.
+请先检查服务设置；修复后在左侧对话继续。|||Check the service settings first, then continue in the chat on the left after the issue is fixed.
+已完成内容保留，请在左侧对话确认是否重试。|||Completed content is retained. Confirm in the chat on the left whether to retry.
+正在处理；有新结果时会更新此处。|||Processing. New results will appear here.
+在对话中开始制作 PPT|||Start a presentation in chat
+先通过左侧问答确定材料与需求。这里随时可以查看完整资料、样张和导出文件。|||Confirm materials and requirements in the chat on the left. You can view the full materials, sample slides, and exports here at any time.
+正文版式|||Content layout
+设计与排版参考|||Design and layout reference
+模板来源|||Template source
+推荐|||Recommended
+全部模板|||All templates
+上传自己的模板|||Upload your own template
+模板暂未加载成功。|||Templates could not be loaded.
+重新加载|||Reload
+正在加载模板…|||Loading templates…
+选择 PPTX、PDF 或图片|||Choose a PPTX, PDF, or image
+刷新解析状态|||Refresh parsing status
+上传并解析|||Upload and parse
+先选择文件|||Choose a file first
+文件仅用于当前项目；选择文件后点击上传才开始解析。|||This file is private to the current project. Parsing starts only after you click Upload.
+我的模板|||My templates
+查看版式|||View layout
+解析未完成|||Parsing incomplete
+搜索模板|||Search templates
+搜索用途、配色或版式|||Search by use case, colors, or layout
+搜索|||Search
+暂无匹配的模板，可以浏览全部模板或上传自己的模板。|||No matching templates. Browse all templates or upload your own.
+查看更多|||View more
+页正文预览||| content slides previewed
+当前项目专用模板。|||A private template for this project.
+仅参考设计和排版，内容不作为本项目事实。|||Use only as a design and layout reference; its content is not project evidence.
+放大第|||Enlarge layout 
+页版式|||
+页正文版式||| content layout
+正文|||Content 
+已确认这套模板|||This template is approved
+此模板不足5页，展示实际可用页面|||This template has fewer than five slides; all available slides are shown
+查看五页版式后，确认使用|||Review the five slide layouts, then approve
+已确认|||Approved
+确认使用|||Use this template
+放大模板页|||Enlarged template slide
+关闭放大预览|||Close enlarged preview
+放大的正文版式|||Enlarged content layout
+上一页|||Previous
+下一页|||Next
+尚无调研结果。请在左侧对话中选择资料范围。|||No research results yet. Select the research scope in the chat on the left.
+调研已排队；新的凝练结果完成后显示在这里。|||Research is queued. The synthesized results will appear here when ready.
+正在补充资料；已完成的调研结果保留。|||Adding research material. Completed results are retained.
+调研已暂停，已获得的资料已保存。可在左侧对话中提出新意见并继续补充。|||Research is paused and collected material is saved. Give feedback and continue in the chat on the left.
+本轮调研未完成，已获得的资料已保存。可在左侧对话中检查缺口并补充。|||This research attempt was not completed; collected material is saved. Review gaps and add material in the chat on the left.
+本轮调研结果已整理，使用与补充意见请在左侧对话中确认。|||Research results are organized. Confirm their use or request additions in the chat on the left.
+已确认使用这版调研资料。|||This version of the research material is approved.
+秘塔学术搜索|||Metaso academic search
+DeepSeek 联网搜索|||DeepSeek web search
+公开资料|||Public sources
+来源|||Source
+数据来源|||Data sources
+搜索摘要|||Search summary
+原文摘录|||Source excerpt
+部分内容|||Partial content
+补充调研正在进行，以下保留上一版已凝练结果。|||Supplementary research is in progress. The previous synthesized results are retained below.
+资料调研结果|||Research results
+已保存|||Saved 
+个来源，尚未形成完整的凝练结论。||| sources; a complete synthesis is not ready yet.
+查看原文依据|||View source evidence
+待核实事项|||Items to verify
+来源分歧|||Conflicting sources
+本版保留部分资料缺口；补充要求与反馈可在左侧对话中提出。|||Some evidence gaps remain in this version. Request additions or provide feedback in the chat on the left.
+封面|||Cover
+示意图|||Schematic
+流程图|||Flowchart
+时间轴|||Timeline
+表格|||Table
+对比|||Comparison
+趋势图|||Trend chart
+散点图|||Scatter plot
+热力图|||Heatmap
+原图与重点标注|||Source image with annotations
+三栏图文|||Three-column layout
+双栏图文|||Two-column layout
+段||| sections
+张幻灯片||| slides
+工作表|||Worksheet
+行||| rows
+上传材料|||Uploaded materials
+原文依据 ·|||Source evidence ·
+条||| items
+生图参考原图 ·|||Reference images for generation ·
+张||| images
+页参考原图||| reference images
+原图已引用，预览暂不可用|||Source image referenced; preview temporarily unavailable
+参考原图|||Source reference image
+本页未选用原始图片，将根据文字设计示意图或图文排版。|||No source image is selected for this slide. A schematic or text-and-image layout will be designed from the text.
+页上屏文字||| on-slide text
+页面文字|||Slide text
+按内容设计版式|||Layout based on content
+逐页正文尚未整理，当前仅有页面标题。|||Detailed slide content is not ready yet; only titles are available.
+版式与表达思路|||Layout and presentation approach
+本页讲解|||Slide explanation
+完整说明与讲稿|||Full explanation and speaker notes
+页大纲||| outline
+讨论这一页的内容与排版|||Discuss this slide's content and layout
+图片或扫描页文字尚未提取，这部分文字尚未进入材料证据。|||Text in images or scanned pages has not been extracted or included as evidence.
+部分页面图片中的文字尚未提取。|||Text in some page images has not been extracted.
+页内图片文字尚未提取，目前仅原生文字进入材料证据。|||Text inside page images has not been extracted; only native text is currently included as evidence.
+材料仅部分内容进入证据，请检查需要补充的页面或段落。|||Only part of this material is included as evidence. Check which pages or passages need to be added.
+部分数据表尚未进入本次材料证据。|||Some data tables are not yet included as evidence for this run.
+图片或扫描页文字尚未提取；本地处理完成不代表这些页面的文字已被读取。|||Image or scanned-page text has not been extracted. Completed local processing does not mean that text has been read.
+机器OCR识别文字，待人工核对；请重点检查数字、单位和专有名词。|||Machine-recognized OCR text awaits human verification. Check numbers, units, and proper nouns carefully.
+处理完成 · 文字待提取|||Processing complete · Text extraction pending
+处理完成 · OCR待核对|||Processing complete · OCR verification pending
+解析已完成|||Parsing complete
+等待解析|||Waiting to parse
+字符||| characters
+已使用完整解析原文|||Complete parsed source text used
+本次大纲直接依据原始解析正文与表格生成|||This outline was generated directly from the parsed source text and tables
+，未先压缩为摘要。扫描图中文字是否提取仍以材料页的识别状态为准。|||, without first summarizing them. Check the materials page to see whether text from scanned images was extracted.
+本次采用了|||This run uses 
+段已提取材料。||| extracted material passages.
+纳入文字共|||Included text totals 
+字符。||| characters.
+有部分材料尚未进入本次大纲|||Some materials are not included in this outline
+材料已上传或解析，并不代表已完整纳入本次规划。请检查遗漏的章节、数据与结论，调整材料重点或补充大纲后再生成样张。|||Uploading or parsing materials does not mean they are fully included in the plan. Check missing sections, data, and conclusions; adjust priorities or supplement the outline before generating sample slides.
+检查项目材料|||Check project materials
+片段|||Passage
+· 机器OCR，待人工核对|||· Machine OCR; human verification pending
+以下为文字摘录，共提取|||The excerpts below contain 
+字符。可继续分段查看全文。||| extracted characters. Continue through the passages to read the full text.
+尚无可用文字片段。|||No text passages available yet.
+上一段|||Previous passage
+下一段|||Next passage
+重新读取|||Read again
+分段查看全文|||Read the full text by passage
+正在读取…|||Loading…
+已显示|||Showing 
+个文字片段||| text passages
+本段读取未完成，可以重试；已读内容保留。|||This passage was not fully loaded. Retry it; previously read content is retained.
+查看|||View 
+张原始图片与出处||| source images and provenance
+原始图片|||Source image
+打开|||Open 
+原图|||Original image
+原图预览暂不可用。|||The original image preview is temporarily unavailable.
+· 原始文件已保留|||· Original file retained
+查看已提取文字与出处|||View extracted text and provenance
+打开原始材料 ↗|||Open original material ↗
+（原图||| (source image 
+部分文字尚未纳入|||Some text is not yet included
+张原图尚未纳入||| source images are not yet included
+查看未纳入的原图名称|||View omitted source image names
+本次材料读取范围|||Material reading scope for this run
+已读取的内容保留。|||Content already read is retained.
+本次已按你的选择保留未读范围提示|||Unread portions remain marked as you selected
+有些材料尚未纳入|||Some materials are not yet included
+逐页内容计划尚未通过检查，应先重新整理内容计划。|||The slide content plan has not passed validation and should be revised first.
+未读文字或图片不会作为已经核对的事实使用。|||Unread text or images will not be treated as verified facts.
+份材料尚未读完。||| materials are not fully read.
+详细缺失范围见材料与覆盖核查报告。|||See the materials and coverage report for the complete list of gaps.
+补充或替换未读材料|||Supplement or replace unread materials
+补充/替换材料|||Supplement / replace materials
+跳过指定未读图片后重新整理|||Revise after skipping the specified unread images
+跳过未读图片，继续整理|||Skip unread images and continue
+仅按已读内容继续|||Continue with content already read
+跳过未读部分，基于现有内容继续|||Skip unread portions and use existing content
+重新整理内容计划|||Revise content plan
+选择后会先放入左侧对话，发送后才记录本版草稿的选择；仍需确认模板和全部生成图片。|||Your choice is first drafted in the chat on the left and recorded only after you send it. The template and all generated images still require approval.
+尚未联网检索。需要时在输入框打开“联网搜索”或“深度探索”后发送。|||No online search has run yet. Enable Web search or Deep research in the input box before sending if needed.
+检索结果已整理，正在并入材料。|||Search results are organized and being added to the materials.
+检索结果已并入材料，制作时与上传资料一起使用。|||Search results are included with the uploaded materials for generation.
+无隅学术检索|||Wuyu academic search
+无隅联网搜索|||Wuyu web search
+检索|||Search
+学术检索|||Academic search
+读取来源|||Read source
+未取得|||No result
+进行中|||In progress
+部分完成|||Partially completed
+搜索详情（|||Search details (
+次检索与读取）||| searches and reads)
+深度探索结果|||Deep research results
+联网搜索结果|||Web search results
+综述中的结论未能逐句对应到来源原文，仅供参考；制作时以上述来源原文为准。|||The synthesis could not be matched sentence by sentence to source text and is for reference only. Generation uses the source passages above as evidence.
+本版保留部分资料缺口；需要时在输入框打开联网检索后补充。|||Some evidence gaps remain. Enable online search in the input box to add material if needed.
+混合 PPTX（|||Mixed PPTX (
+页可编辑，||| editable slides, 
+页图片）||| image slides)
+可编辑 PPTX（|||Editable PPTX (
+页）||| slides)
+页图片，不可编辑）||| image slides, not editable)
+正在读取完整材料并生成大纲|||Reading complete materials and generating the outline
+正在检索资料并整理调研总结|||Searching sources and preparing a research summary
+正在检查 PPT 文件|||Checking presentation files
+正在导出 PPT 文件|||Exporting presentation files
+素材图片（PNG）|||Asset image (PNG)
+页图片（PNG）||| slide image (PNG)
+演示报告|||Presentation
+图片版.pptx|||image-based.pptx
+可编辑版.pptx|||editable.pptx
+混合可编辑版.pptx|||mixed-editable.pptx
+报告.pdf|||report.pdf
+页面图片.zip|||slide-images.zip
+来源清单.json|||sources.json
+阅读草稿.md|||reading-draft.md
+阅读证据.json|||reading-evidence.json
+阅读核查.json|||reading-coverage.json
+页面.png|||slide.png
+页.png|||slide.png
+素材.png|||asset.png
+文件|||File
+在左侧对话上传资料；在输入框打开“联网搜索”或“深度探索”后，检索结果也会出现在这里。|||Upload materials in the chat on the left. Results from Web search or Deep research will also appear here when enabled in the input box.
+正在后台处理，不需要停留在对话里；此处每 3 秒自动刷新。|||Work continues in the background; you can leave the conversation. This panel refreshes every 3 seconds.
+无隅 AI · PPT详情|||Wuyu AI · Presentation details
+提出修改意见|||Suggest revisions
+意见会放入左侧输入框，由你确认后发送；这里不会直接生成、修改或批准页面。|||Feedback is drafted in the chat input on the left for you to check and send. This panel does not generate, edit, or approve slides directly.
+具体意见|||Feedback details
+说明希望保留或调整的内容|||Describe what you want to keep or change
+放入对话输入框|||Insert into chat input
+图文参考库|||Text and image reference library
+关闭|||Close
+关闭参考库|||Close reference library
+关键词|||Keywords
+技术路线、研究基础、市场分析…|||Technical approaches, research background, market analysis…
+全部来源|||All sources
+本地资料|||Local materials
+已审核共享模板|||Reviewed shared templates
+只读浏览。选用参考、审核样张和修改页面请通过左侧对话确认。|||Read-only browsing. Confirm reference selection, sample reviews, and slide revisions in the chat on the left.
+加载更多来源|||Load more sources
+无隅 AI 原品牌标识|||Original Wuyu AI brand mark
+我想参考这个来源的表达方式（来源ID：|||I would like to reference the presentation style of this source (source ID: 
+），请结合当前项目需求讨论是否适合。|||). Please discuss whether it suits the requirements of this project.

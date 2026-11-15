@@ -1,0 +1,633 @@
+{
+  "sha256": "5f0eefdd03047b339e3c08c35733f6883863be1fcb5f1d2cee087ef7f98562db",
+  "app": "Rt",
+  "state": "m",
+  "appStart": 317883,
+  "objects": [
+    {
+      "name": "r",
+      "keys": [
+        "regex",
+        "email",
+        "url",
+        "emoji",
+        "uuid",
+        "uuidv4",
+        "uuidv6",
+        "nanoid",
+        "guid",
+        "cuid",
+        "cuid2",
+        "ulid",
+        "xid",
+        "ksuid",
+        "datetime",
+        "date",
+        "time",
+        "duration",
+        "ipv4",
+        "ipv6",
+        "cidrv4",
+        "cidrv6",
+        "base64",
+        "base64url",
+        "json_string",
+        "e164",
+        "jwt",
+        "template_literal"
+      ],
+      "values": [
+        "入力値",
+        "メールアドレス",
+        "URL",
+        "絵文字",
+        "UUID",
+        "UUIDv4",
+        "UUIDv6",
+        "nanoid",
+        "GUID",
+        "cuid",
+        "cuid2",
+        "ULID",
+        "XID",
+        "KSUID",
+        "ISO日時",
+        "ISO日付",
+        "ISO時刻",
+        "ISO期間",
+        "IPv4アドレス",
+        "IPv6アドレス",
+        "IPv4範囲",
+        "IPv6範囲",
+        "base64エンコード文字列",
+        "base64urlエンコード文字列",
+        "JSON文字列",
+        "E.164番号",
+        "JWT",
+        "入力値"
+      ],
+      "pos": 126113
+    },
+    {
+      "name": "o",
+      "keys": [
+        "nan",
+        "number",
+        "array"
+      ],
+      "values": [
+        "NaN",
+        "数値",
+        "配列"
+      ],
+      "pos": 126549
+    },
+    {
+      "name": "r",
+      "keys": [
+        "regex",
+        "email",
+        "url",
+        "emoji",
+        "uuid",
+        "uuidv4",
+        "uuidv6",
+        "nanoid",
+        "guid",
+        "cuid",
+        "cuid2",
+        "ulid",
+        "xid",
+        "ksuid",
+        "datetime",
+        "date",
+        "time",
+        "duration",
+        "ipv4",
+        "ipv6",
+        "cidrv4",
+        "cidrv6",
+        "base64",
+        "base64url",
+        "json_string",
+        "e164",
+        "jwt",
+        "template_literal"
+      ],
+      "values": [
+        "输入",
+        "电子邮件",
+        "URL",
+        "表情符号",
+        "UUID",
+        "UUIDv4",
+        "UUIDv6",
+        "nanoid",
+        "GUID",
+        "cuid",
+        "cuid2",
+        "ULID",
+        "XID",
+        "KSUID",
+        "ISO日期时间",
+        "ISO日期",
+        "ISO时间",
+        "ISO时长",
+        "IPv4地址",
+        "IPv6地址",
+        "IPv4网段",
+        "IPv6网段",
+        "base64编码字符串",
+        "base64url编码字符串",
+        "JSON字符串",
+        "E.164号码",
+        "JWT",
+        "输入"
+      ],
+      "pos": 187086
+    },
+    {
+      "name": "o",
+      "keys": [
+        "nan",
+        "number",
+        "array",
+        "null"
+      ],
+      "values": [
+        "NaN",
+        "数字",
+        "数组",
+        "空值(null)"
+      ],
+      "pos": 187510
+    },
+    {
+      "name": "r",
+      "keys": [
+        "regex",
+        "email",
+        "url",
+        "emoji",
+        "uuid",
+        "uuidv4",
+        "uuidv6",
+        "nanoid",
+        "guid",
+        "cuid",
+        "cuid2",
+        "ulid",
+        "xid",
+        "ksuid",
+        "datetime",
+        "date",
+        "time",
+        "duration",
+        "ipv4",
+        "ipv6",
+        "cidrv4",
+        "cidrv6",
+        "base64",
+        "base64url",
+        "json_string",
+        "e164",
+        "jwt",
+        "template_literal"
+      ],
+      "values": [
+        "輸入",
+        "郵件地址",
+        "URL",
+        "emoji",
+        "UUID",
+        "UUIDv4",
+        "UUIDv6",
+        "nanoid",
+        "GUID",
+        "cuid",
+        "cuid2",
+        "ULID",
+        "XID",
+        "KSUID",
+        "ISO 日期時間",
+        "ISO 日期",
+        "ISO 時間",
+        "ISO 期間",
+        "IPv4 位址",
+        "IPv6 位址",
+        "IPv4 範圍",
+        "IPv6 範圍",
+        "base64 編碼字串",
+        "base64url 編碼字串",
+        "JSON 字串",
+        "E.164 數值",
+        "JWT",
+        "輸入"
+      ],
+      "pos": 189017
+    },
+    {
+      "name": "_c",
+      "keys": [
+        "purpose",
+        "page_role",
+        "visual_style",
+        "layout_structure",
+        "information_density",
+        "industry_topic"
+      ],
+      "values": [
+        "用途",
+        "页面角色",
+        "视觉特征",
+        "版式结构",
+        "信息密度",
+        "行业主题"
+      ],
+      "pos": 318289
+    },
+    {
+      "name": "Ds",
+      "keys": [
+        "guided",
+        "template_only",
+        "template_and_final"
+      ],
+      "values": [
+        "逐页审核",
+        "样张确认后自动整稿",
+        "样张 + 一次整稿审核"
+      ],
+      "pos": 318417
+    },
+    {
+      "name": "Zi",
+      "keys": [
+        "interrupted",
+        "queued",
+        "pending",
+        "running",
+        "ready",
+        "completed",
+        "complete",
+        "succeeded",
+        "failed",
+        "error",
+        "cancelled",
+        "canceled",
+        "paused",
+        "idle",
+        "parsed",
+        "uploaded",
+        "parsing"
+      ],
+      "values": [
+        "可续跑",
+        "排队中",
+        "等待中",
+        "处理中",
+        "已就绪",
+        "已完成",
+        "已完成",
+        "已完成",
+        "失败",
+        "失败",
+        "已取消",
+        "已取消",
+        "已暂停",
+        "待生成",
+        "已解析",
+        "已上传",
+        "解析中"
+      ],
+      "pos": 318495
+    },
+    {
+      "name": "$c",
+      "keys": [
+        "choice_required",
+        "queued",
+        "running",
+        "paused",
+        "failed",
+        "review_required",
+        "accepted"
+      ],
+      "values": [
+        "尚未联网检索。需要时在输入框打开“联网搜索”或“深度探索”后发送。",
+        "调研已排队；新的凝练结果完成后显示在这里。",
+        "正在补充资料；已完成的调研结果保留。",
+        "调研已暂停，已获得的资料已保存。可在左侧对话中提出新意见并继续补充。",
+        "本轮调研未完成，已获得的资料已保存。可在左侧对话中检查缺口并补充。",
+        "检索结果已整理，正在并入材料。",
+        "检索结果已并入材料，制作时与上传资料一起使用。"
+      ],
+      "pos": 321963
+    },
+    {
+      "name": "yc",
+      "keys": [
+        "search",
+        "scholar",
+        "fetch"
+      ],
+      "values": [
+        "检索",
+        "学术检索",
+        "读取来源"
+      ],
+      "pos": 323095
+    },
+    {
+      "name": "y$",
+      "keys": [
+        "completed",
+        "failed",
+        "running",
+        "partial"
+      ],
+      "values": [
+        "已完成",
+        "未取得",
+        "进行中",
+        "部分完成"
+      ],
+      "pos": 323140
+    },
+    {
+      "name": "w$",
+      "keys": [
+        "ocr_pending",
+        "image_text_not_extracted",
+        "embedded_images_not_ocr",
+        "material_truncated",
+        "structured_tables_truncated"
+      ],
+      "values": [
+        "图片或扫描页文字尚未提取，这部分文字尚未进入材料证据。",
+        "部分页面图片中的文字尚未提取。",
+        "页内图片文字尚未提取，目前仅原生文字进入材料证据。",
+        "材料仅部分内容进入证据，请检查需要补充的页面或段落。",
+        "部分数据表尚未进入本次材料证据。"
+      ],
+      "pos": 325351
+    },
+    {
+      "name": "N$",
+      "keys": [
+        "cover",
+        "qualitative_diagram",
+        "flowchart",
+        "process_flow",
+        "timeline",
+        "table",
+        "comparison",
+        "line_chart",
+        "scatter_chart",
+        "heatmap",
+        "image_with_annotations",
+        "three_columns",
+        "two_columns"
+      ],
+      "values": [
+        "封面",
+        "示意图",
+        "流程图",
+        "流程图",
+        "时间轴",
+        "表格",
+        "对比",
+        "趋势图",
+        "散点图",
+        "热力图",
+        "原图与重点标注",
+        "三栏图文",
+        "双栏图文"
+      ],
+      "pos": 341290
+    },
+    {
+      "name": "l",
+      "keys": [
+        "pptx",
+        "image_pptx",
+        "editable_pptx",
+        "hybrid_pptx",
+        "pdf",
+        "images_zip",
+        "sources",
+        "sources_json",
+        "markdown",
+        "reading_evidence",
+        "reading_report",
+        "png"
+      ],
+      "values": [
+        "图片版.pptx",
+        "图片版.pptx",
+        "可编辑版.pptx",
+        "混合可编辑版.pptx",
+        "报告.pdf",
+        "页面图片.zip",
+        "来源清单.json",
+        "来源清单.json",
+        "阅读草稿.md",
+        "阅读证据.json",
+        "阅读核查.json",
+        "页面.png"
+      ],
+      "pos": 347700
+    },
+    {
+      "name": "Rs",
+      "keys": [
+        "brief",
+        "materials",
+        "templates",
+        "outline",
+        "slides",
+        "trace",
+        "export"
+      ],
+      "values": [
+        "需求",
+        "材料",
+        "模板",
+        "大纲",
+        "页面",
+        "可编辑预览",
+        "导出文件"
+      ],
+      "pos": 351692
+    },
+    {
+      "name": "L$",
+      "keys": [
+        "reading",
+        "draft_review",
+        "requirements",
+        "samples",
+        "outline_review",
+        "template_review",
+        "page_generation",
+        "page_review",
+        "final_image_review",
+        "tracing",
+        "quality_check",
+        "exporting",
+        "ready_to_export",
+        "exported"
+      ],
+      "values": [
+        "正在阅读材料",
+        "等待对话确认阅读草稿",
+        "正在确认需求",
+        "正在准备样张",
+        "大纲已就绪",
+        "等待对话确认样张",
+        "正在生成页面",
+        "等待对话审核当前页",
+        "等待对话审核整稿",
+        "正在描摹",
+        "正在检查文件",
+        "正在导出",
+        "文件准备就绪",
+        "已完成交付"
+      ],
+      "pos": 351791
+    },
+    {
+      "name": "o",
+      "keys": [
+        "analyze_materials",
+        "revise_draft",
+        "_parse_materials",
+        "generate_outline",
+        "generate_samples",
+        "regenerate_samples",
+        "generate_next",
+        "generate_focused",
+        "revise_page",
+        "start_tracing",
+        "export"
+      ],
+      "values": [
+        "正在阅读材料并整理详细草稿",
+        "正在修订阅读草稿",
+        "正在解析材料",
+        "正在生成大纲",
+        "正在制作样张",
+        "正在修订样张",
+        "正在生成页面",
+        "正在按要求生成",
+        "正在修订页面",
+        "正在描摹页面",
+        "正在导出文件"
+      ],
+      "pos": 353718
+    },
+    {
+      "name": "n",
+      "keys": [
+        "scenario",
+        "subscenario",
+        "topic",
+        "audience",
+        "goal",
+        "page_count",
+        "duration",
+        "style",
+        "review_policy"
+      ],
+      "values": [
+        "场景",
+        "具体用途",
+        "主题",
+        "听众",
+        "希望达成的目标",
+        "页数",
+        "汇报时长",
+        "风格",
+        "审核方式"
+      ],
+      "pos": 355325
+    },
+    {
+      "name": "r",
+      "keys": [
+        "research",
+        "commercial",
+        "grant",
+        "degree",
+        "paper",
+        "talent",
+        "award",
+        "progress",
+        "business_plan",
+        "technical_proposal",
+        "product",
+        "market",
+        "project_report",
+        "bid"
+      ],
+      "values": [
+        "科研汇报",
+        "商业汇报",
+        "基金与项目申报",
+        "学位与开题",
+        "论文与组会",
+        "人才项目",
+        "科技奖励",
+        "科研进展",
+        "商业计划",
+        "技术方案",
+        "产品介绍",
+        "市场产业调研",
+        "项目汇报",
+        "投标客户方案"
+      ],
+      "pos": 355466
+    },
+    {
+      "name": "n",
+      "keys": [
+        "idle",
+        "reading",
+        "draft_ready",
+        "draft_incomplete",
+        "accepted"
+      ],
+      "values": [
+        "等待阅读已确认的材料",
+        "正在阅读材料",
+        "详细阅读草稿已生成",
+        "材料阅读尚不完整",
+        "当前阅读草稿已确认"
+      ],
+      "pos": 356647
+    },
+    {
+      "name": "i",
+      "keys": [
+        "editable_pptx",
+        "pptx",
+        "image_pptx",
+        "pdf",
+        "images_zip",
+        "sources",
+        "sources_json"
+      ],
+      "values": [
+        "可编辑 PPTX",
+        "图片版 PPTX（不可编辑）",
+        "图片版 PPTX（不可编辑）",
+        "PDF 文档",
+        "整套页面图片",
+        "来源清单",
+        "来源清单"
+      ],
+      "pos": 360984
+    }
+  ],
+  "parseErrors": 0
+}

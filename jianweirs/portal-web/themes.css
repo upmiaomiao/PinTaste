@@ -1,0 +1,714 @@
+/* Theme is an account preference, independent of the shared platform settings.
+   Keep source imagery untouched; only application surfaces and text are themed. */
+:root,
+body {
+  --personal-surface: #fff;
+  --personal-soft: #f7f8fa;
+}
+:root :is(.answer-pending, .image-preview > span) {
+  color: var(--wuyu-secondary);
+}
+:root
+  :is(
+    .metadata-grid dt,
+    .metadata-grid dd,
+    .location-note,
+    .location-candidate span,
+    .location-candidate small
+  ) {
+  color: var(--wuyu-muted);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"],
+:root[data-theme="dark"] body {
+  color-scheme: dark;
+  --wuyu-text: #eceef2;
+  --wuyu-secondary: #d0d5dd;
+  --wuyu-muted: #a6afbd;
+  --wuyu-line: #3a404b;
+  --wuyu-hover: #2c323a;
+  --wuyu-active: #303f39;
+  --personal-surface: #20242a;
+  --personal-soft: #272c33;
+  --paper: #20242a;
+  --canvas: #17191d;
+  --hover: #2c323a;
+  --selected: #303f39;
+  --ink: #eceef2;
+  --secondary: #d0d5dd;
+  --muted: #a6afbd;
+  --line: #3a404b;
+  background: #17191d;
+  color: var(--wuyu-text);
+}
+:root[data-theme="dark"]
+  :is(
+    .app-shell,
+    .workspace,
+    .chat-main,
+    .chat-scroll,
+    .admin-shell,
+    .admin-layout,
+    .admin-content,
+    .connection-error,
+    .initial-loader,
+    .auth-page
+  ) {
+  background: #17191d;
+  color: var(--wuyu-text);
+}
+:root[data-theme="dark"] :is(.sidebar, .admin-sidebar) {
+  background: #1d2026;
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"]
+  :is(
+    .topbar,
+    .task-heading,
+    .admin-topbar,
+    .evidence-sidebar,
+    .evidence-header,
+    .modal,
+    .toast,
+    .auth-box,
+    .platform-auth .auth-box
+  ) {
+  background: var(--personal-surface);
+  color: var(--wuyu-text);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] .home-workspace {
+  background:
+    radial-gradient(ellipse 46% 48% at 52% 53%, #294d3a52, transparent 84%),
+    #17191d;
+}
+:root[data-theme="dark"] .platform-auth {
+  background:
+    radial-gradient(ellipse 38% 44% at 50% 50%, #294d3a52, transparent 85%),
+    #17191d;
+}
+:root[data-theme="dark"]
+  :is(
+    .composer-dock,
+    .chat-thread,
+    .assistant-message,
+    .message-content,
+    .consumer-conclusion-panel,
+    .admin-brand,
+    .admin-top-return
+  ) {
+  background: transparent;
+  color: var(--wuyu-text);
+}
+:root[data-theme="dark"]
+  :is(
+    .composer,
+    .starter-card,
+    .panel,
+    .admin-stat,
+    .config-card,
+    .admin-health-strip,
+    .data-service-health,
+    .admin-model-card,
+    .modal-body,
+    .modal-header,
+    .modal-footer,
+    .question-card,
+    .question-body,
+    .question-footer,
+    .image-pair,
+    .evidence-image,
+    .policy-card,
+    .science-evidence,
+    .science-card,
+    .task-result-panel,
+    .source-observation,
+    .source-choice,
+    .tool-call,
+    .complaint-scan-panel,
+    .scope-summary,
+    .temporal-conditions
+  ) {
+  background: var(--personal-surface);
+  color: var(--wuyu-text);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"]
+  :is(
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    strong,
+    b,
+    summary,
+    .consumer-conclusion,
+    .task-result-conclusion,
+    .task-specific-result > p,
+    .task-specific-result ul,
+    .markdown-body,
+    .work-entry-content,
+    .work-entry-content p,
+    .work-entry-title,
+    .brand,
+    .brand strong,
+    .account-text,
+    .admin-role,
+    .field,
+    .user-message,
+    .system-message,
+    .report-intro,
+    .task-result-heading,
+    .source-detail-content
+  ) {
+  color: var(--wuyu-text);
+}
+:root[data-theme="dark"]
+  :is(.app-shell, .admin-shell, .modal, .auth-page)
+  :where(p, li, label, td, blockquote) {
+  color: inherit;
+}
+:root[data-theme="dark"]
+  :is(
+    .history-item,
+    .sidebar-link,
+    .workspace-folder,
+    .admin-nav button,
+    .admin-back,
+    .admin-top-return,
+    .admin-brand,
+    .admin-shell .field,
+    .admin-shell .text-button,
+    .admin-shell td strong
+  ) {
+  color: var(--wuyu-text);
+}
+:root[data-theme="dark"]
+  :is(
+    .history-item small,
+    .history-heading,
+    .workspace-folder,
+    .account-text small,
+    .product-heading > span,
+    .task-heading,
+    .empty-chat p,
+    .starter-card small,
+    .work-entry-meta,
+    .work-entry-time,
+    .work-entry-facts,
+    .expert-worklog > summary small,
+    .message-meta,
+    .message-footer,
+    .image-meta,
+    .image-caption,
+    .source-label,
+    .admin-description,
+    .admin-panel-note,
+    .admin-shell .field small,
+    .admin-shell td small,
+    .admin-nav-label,
+    .admin-nav-bottom,
+    .personal-note,
+    .personal-sync,
+    .personal-save-status,
+    .capability-note,
+    .auth-footnote,
+    .quota-note,
+    .task-result-heading > span
+  ) {
+  color: var(--wuyu-muted);
+}
+:root[data-theme="dark"]
+  :is(.app-shell, .admin-shell, .modal, .auth-page)
+  :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background: var(--personal-surface);
+  color: var(--wuyu-text);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] :is(input, textarea)::placeholder {
+  color: #9da7b6;
+}
+:root[data-theme="dark"]
+  :is(
+    .secondary,
+    .composer-chip,
+    .progress-pill,
+    .icon-button,
+    .text-button,
+    .evidence-tabs button,
+    .evidence-comparison-tabs button,
+    .image-pair button,
+    .image-tabs button,
+    .stop-button,
+    .sidebar .new-task,
+    .admin-shell .secondary
+  ) {
+  color: var(--wuyu-secondary);
+  background: var(--personal-surface);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] :is(.icon-button, .text-button) {
+  background: transparent;
+}
+:root[data-theme="dark"]
+  :is(
+    .history-item.active,
+    .history-item:hover,
+    .sidebar-link:hover,
+    .icon-button:hover,
+    .text-button:hover,
+    .secondary:hover,
+    .admin-nav button:hover,
+    .admin-back:hover
+  ) {
+  background: var(--wuyu-hover);
+}
+:root[data-theme="dark"]
+  :is(
+    .avatar,
+    .pill,
+    .result-state,
+    .tag,
+    .source-chip,
+    .file-chip,
+    .work-entry-number,
+    .work-entry-icon,
+    .work-entry-status,
+    .material-event,
+    .user-message,
+    .question-option,
+    .option-number,
+    .source-record,
+    .work-entry-facts,
+    .science-badge,
+    .admin-stat-icon,
+    .admin-model-icon,
+    .task-chip,
+    .chosen-place,
+    .library-item,
+    .source-records > summary,
+    .candidate-item,
+    .annotation-card,
+    .profile-trigger .avatar
+  ) {
+  background: var(--personal-soft);
+  border-color: var(--wuyu-line);
+  color: var(--wuyu-secondary);
+}
+:root[data-theme="dark"]
+  :is(
+    .primary,
+    .admin-shell .primary,
+    .composer-send:not(:disabled),
+    .composer-chip.selected,
+    .admin-nav button.active,
+    .personal-nav button[aria-current="page"],
+    .question-option.selected,
+    .source-choice:has(input:checked),
+    .evidence-tabs button.active,
+    .evidence-comparison-tabs button[aria-pressed="true"],
+    .image-pair button.active
+  ) {
+  background: var(--wuyu-primary);
+  color: #fff;
+  border-color: var(--wuyu-primary);
+}
+:root[data-theme="dark"]
+  :is(
+    .primary,
+    .question-option.selected,
+    .source-choice:has(input:checked),
+    .admin-nav button.active
+  )
+  :where(strong, span, small, b) {
+  color: #fff;
+}
+:root[data-theme="dark"] .composer-send:disabled {
+  background: var(--personal-soft);
+  color: #919aa8;
+}
+:root[data-theme="dark"] :is(a, a:visited) {
+  color: var(--wuyu-secondary);
+}
+:root[data-theme="dark"] a.primary {
+  color: #fff;
+}
+:root[data-theme="dark"]
+  :is(.markdown-body a, .source-citation, .evidence-link) {
+  color: #9bbff0;
+}
+:root[data-theme="dark"]
+  :is(
+    .personal-layout,
+    .personal-nav,
+    .personal-quota-card,
+    .personal-preference-row,
+    .personal-account-actions,
+    .supporting-details,
+    .source-records,
+    .work-entry,
+    .work-entry-body,
+    .worklog-entries,
+    .expert-worklog,
+    .task-result-records,
+    .task-specific-result,
+    .task-timeline,
+    .markdown-body th,
+    .markdown-body td,
+    .admin-shell th,
+    .admin-shell td,
+    .table-wrap,
+    .admin-nav-group,
+    .evidence-tabs,
+    .evidence-comparison-tabs,
+    .image-header,
+    .question-card,
+    .question-option,
+    .modal-header,
+    .modal-footer,
+    .task-heading,
+    .image-caption,
+    .assistant-header
+  ) {
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"]
+  :is(
+    .admin-shell th,
+    .markdown-body th,
+    .markdown-body pre,
+    .markdown-body code,
+    .source-records-body,
+    .evidence-notice
+  ) {
+  background: var(--personal-soft);
+  color: var(--wuyu-secondary);
+}
+:root[data-theme="dark"]
+  :is(.error-box, .personal-error, .form-error, .toast.error) {
+  background: #3d262b;
+  color: #ffc4c4;
+  border-color: #805056;
+}
+:root[data-theme="dark"] .empty-chat em {
+  color: #5bce99;
+}
+:root[data-theme="dark"] .theme-preview {
+  border-color: #626b79;
+}
+:root[data-theme="dark"] .composer {
+  box-shadow: 0 5px 24px #0002;
+}
+:root[data-theme="dark"] .supporting-details > summary:hover {
+  background: var(--wuyu-hover);
+}
+
+/* Legacy administrative widgets have explicit light colours; normalize their
+   surfaces and secondary text without changing coloured controls or imagery. */
+:root[data-theme="dark"]
+  :is(
+    .history-search,
+    .admin-back,
+    .admin-nav button:not(.active),
+    .model-card-mark,
+    .admin-model-symbol
+  ) {
+  background: var(--personal-surface);
+  color: var(--wuyu-secondary);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] .admin-shell :where(span, small, code) {
+  color: inherit;
+}
+:root[data-theme="dark"]
+  .admin-shell
+  :is(
+    .admin-stat > span,
+    .admin-stat small,
+    .config-card small,
+    .config-card code,
+    .overview-updated,
+    .admin-model-name,
+    .model-metadata,
+    .role-heading p
+  ) {
+  color: var(--wuyu-muted);
+}
+:root[data-theme="dark"] .sidebar-bottom {
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] .app-shell {
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] .admin-shell :is(td, .role-icon) {
+  background: var(--personal-surface);
+  color: var(--wuyu-secondary);
+}
+:root[data-theme="dark"]
+  :is(
+    .next-questions button,
+    .answer-artifacts a,
+    .location-candidate,
+    .evidence-resizer
+  ) {
+  background: var(--personal-surface);
+  color: var(--wuyu-secondary);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] .evidence-resizer:before {
+  background: var(--wuyu-line);
+}
+:root[data-theme="dark"] .evidence-resizer:after {
+  background: var(--personal-soft);
+  border-color: var(--wuyu-muted);
+}
+:root[data-theme="dark"] .consumer-conclusion-panel {
+  background: transparent;
+}
+:root[data-theme="dark"]
+  :is(.work-entry-details > summary, .image-preview > span) {
+  background: var(--personal-soft);
+  color: var(--wuyu-secondary);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] :is(dt, dd, .ledger-unified, .ledger-unified > span) {
+  color: var(--wuyu-secondary);
+}
+:root[data-theme="dark"] .location-candidate :is(span, small) {
+  color: var(--wuyu-muted);
+}
+:root[data-theme="dark"] :is(.app-shell, .modal) :is(th, thead) {
+  background: var(--personal-soft);
+  color: var(--wuyu-secondary);
+  border-color: var(--wuyu-line);
+}
+
+/* In-flight work uses the same neutral, readable palette as completed work. */
+:root[data-theme="dark"] .answer-pending {
+  color: var(--wuyu-secondary);
+}
+:root[data-theme="dark"] .loading-dot {
+  background: var(--wuyu-secondary);
+  animation: dark-loading-breathe 1.5s ease-in-out infinite;
+}
+:root[data-theme="dark"] .status-dot {
+  background: var(--wuyu-muted);
+}
+:root[data-theme="dark"] .status-dot.live {
+  background: var(--wuyu-secondary);
+  box-shadow: 0 0 0 3px var(--personal-soft);
+}
+:root[data-theme="dark"] .work-entry-marker {
+  background: var(--personal-soft);
+  color: var(--wuyu-secondary);
+}
+:root[data-theme="dark"] .spin,
+:root[data-theme="dark"] .work-entry .spin {
+  border-color: #687385;
+  border-top-color: var(--wuyu-text);
+  border-right-color: transparent;
+}
+:root[data-theme="dark"] .primary .spin {
+  border-color: #ffffff70;
+  border-top-color: #fff;
+  border-right-color: transparent;
+}
+:root[data-theme="dark"] .worklog-entries .work-entry:not(:last-child):before {
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"]
+  :is(.work-entry.working, .work-warning)
+  .work-entry-content
+  strong {
+  color: var(--wuyu-text);
+}
+:root[data-theme="dark"]
+  :is(
+    .work-source,
+    .trace-state,
+    .trace-step-number,
+    .stage-badge,
+    .review-note
+  ) {
+  background: var(--personal-soft);
+  color: var(--wuyu-secondary);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"]
+  :is(
+    .dialogue-question,
+    .question-free-label,
+    .scan-draft,
+    .scan-location,
+    .scan-plan-result,
+    .scan-coverage,
+    .scan-metrics > div,
+    .workbook-proposals
+  ) {
+  background: var(--personal-surface);
+  color: var(--wuyu-text);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"]
+  :is(
+    .dialogue-question > header,
+    .location-note,
+    .scan-center-note,
+    .scan-plan-note,
+    .scan-blindspots,
+    .scan-grid figcaption,
+    .batch-selection-count,
+    .quota-usage,
+    .library-item small,
+    .evidence-note,
+    .evidence-selection-reason,
+    .no-evidence,
+    .answer-time
+  ) {
+  color: var(--wuyu-muted);
+}
+:root[data-theme="dark"]
+  :is(
+    .source-group,
+    .scan-location,
+    .scan-coverage > header,
+    .material-log,
+    .scan-metrics,
+    .source-detail,
+    .finding-card,
+    .expert-worklog > summary,
+    .image-preview,
+    .image-description
+  ) {
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] :is(.source-choice, .question-option):hover {
+  background: var(--wuyu-hover);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"]
+  :is(.source-choice input[type="checkbox"], input[type="radio"]) {
+  background: var(--personal-soft);
+  border-color: var(--wuyu-muted);
+  accent-color: var(--wuyu-primary);
+}
+:root[data-theme="dark"]
+  .source-choice:has(input:checked)
+  input[type="checkbox"] {
+  background: #fff;
+  border-color: #fff;
+}
+:root[data-theme="dark"] .scan-grid svg > rect:first-child {
+  fill: var(--personal-soft);
+}
+:root[data-theme="dark"] .scan-grid svg > rect[fill="#eef1f0"] {
+  fill: var(--wuyu-hover);
+  stroke: var(--wuyu-muted);
+}
+:root[data-theme="dark"] .scan-grid svg > rect[fill="#dcece3"] {
+  fill: #3d5f50;
+  stroke: var(--wuyu-muted);
+}
+:root[data-theme="dark"] .scan-grid svg > rect[fill="none"] {
+  stroke: var(--wuyu-secondary);
+}
+:root[data-theme="dark"] .scan-grid svg text {
+  fill: var(--wuyu-text);
+}
+@keyframes dark-loading-breathe {
+  50% {
+    opacity: 0.72;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="dark"] .loading-dot {
+    animation: none;
+  }}
+
+/* 暗色补全：这些组件原来只定义了浅色背景。 */
+:root[data-theme="dark"] .scroll-latest {
+  background: var(--personal-surface);
+  border-color: var(--wuyu-line);
+  color: var(--wuyu-secondary);
+}
+:root[data-theme="dark"] .image-viewport {
+  background: #0f1114;
+}
+:root[data-theme="dark"] .toolbar-divider {
+  background: var(--wuyu-line);
+}
+:root[data-theme="dark"] .verdict-line {
+  background: var(--selected, #303f39);
+  border-color: #4f7a62;
+}
+:root[data-theme="dark"] .verdict-line p {
+  color: var(--wuyu-muted);
+}
+:root[data-theme="dark"] .custom-answer-icon {
+  background: var(--personal-soft);
+  color: var(--wuyu-muted);
+}
+:root[data-theme="dark"] .admin-shell .notice-box {
+  background: var(--personal-surface);
+  border-color: var(--wuyu-line);
+}
+
+/* 依据影像卡片、结论要点与下一步建议的深色主题 */
+:root[data-theme="dark"] :is(.evi-card, .next-steps-list) {
+  background: var(--personal-surface);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] .result-keypoints > div {
+  background: var(--personal-soft);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] :is(.evi-body header strong, .next-step-text strong) {
+  color: var(--wuyu-text);
+}
+:root[data-theme="dark"] :is(.evi-text p, .result-keypoints dd, .evi-meta dd) {
+  color: var(--wuyu-secondary);
+}
+:root[data-theme="dark"] :is(.evi-tag, .next-step-no) {
+  background: var(--personal-soft);
+  color: var(--wuyu-secondary);
+}
+:root[data-theme="dark"] :is(.next-steps-list li + li, .evi-meta) {
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] .next-step:hover {
+  background: var(--wuyu-hover);
+}
+:root[data-theme="dark"] .report-card {
+  color: var(--wuyu-text);
+  background: var(--personal-surface);
+  border-color: var(--wuyu-line);
+}
+:root[data-theme="dark"] .report-text strong {
+  color: var(--wuyu-text);
+}
+:root[data-theme="dark"] .report-text small {
+  color: var(--wuyu-muted);
+}
+:root[data-theme="dark"] .report-word .report-go {
+  color: #8db4f5;
+}
+:root[data-theme="dark"] .report-html .report-go {
+  color: #7bd3a0;
+}
+:root[data-theme="dark"] .report-all .report-go {
+  color: #f3b071;
+}
+:root[data-theme="dark"] :is(.answer-model-badge, .model-chip-shensi) {
+  color: #7bd3a0;
+}
+:root[data-theme="dark"] .model-chip-shensi {
+  border-color: #7bd3a0;
+}
+:root[data-theme="dark"] .task-result-heading .answer-model-badge,
+:root[data-theme="dark"] .answer-model-line .answer-model-badge {
+  color: #7bd3a0;
+}

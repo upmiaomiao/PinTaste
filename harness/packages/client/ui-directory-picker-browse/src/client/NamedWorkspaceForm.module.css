@@ -1,0 +1,5 @@
+.body { display: grid; gap: 12px; min-width: min(360px, calc(100vw - 72px)); padding: 8px 0; }
+.label { font-size: 14px; color: var(--color-text-primary, #20242b); font-weight: 500; }
+.input { width: 100%; box-sizing: border-box; border: 1px solid var(--color-border, #dce1e5); border-radius: 10px; padding: 12px 14px; font: inherit; color: inherit; background: var(--color-background, #fff); outline-offset: 3px; }
+.hint { margin: 0; color: var(--color-text-secondary, #77808c); font-size: 13px; line-height: 1.65; }
+.error { margin: 0; color: var(--color-danger, #b43838); font-size: 13px; line-height: 1.65; }

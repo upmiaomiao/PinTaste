@@ -1,0 +1,18 @@
+[Unit]
+Description=Wuyu staging chat task health journal probe
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/wuyu-staging/source/platform/official/task_monitor.py
+StateDirectory=wuyu-staging-task-monitor
+StateDirectoryMode=0700
+TimeoutStartSec=25
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/wuyu-staging-task-monitor
+UMask=0077
+StandardOutput=journal
+StandardError=journal

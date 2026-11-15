@@ -1,0 +1,211 @@
+/* NEW SESSION hero (figma Input_Bottom 75:8208): fish + title, workspace chip
+   above the shared InputBar card. The input itself is InputBar — only stack
+   geometry and the chip live here. */
+
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0 20px 20px;
+}
+
+.subtitle { margin:14px 0 0; color:var(--dsw-alias-label-secondary); text-align:center; font-size:14px; line-height:1.8; }
+
+/* Cap matches the InputBar card. Glow may paint past the sides. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  /* figma 75:8208: 12 between title block / workspace / card. */
+  gap: 0;
+  width: 100%;
+  max-width: var(--dsh-composer-card-max-width);
+  overflow: visible;
+}
+
+/* Welcome typography follows the original Wuyu AI landing page. */
+.headline {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(25px, 2vw, 32px);
+  line-height: 1.5;
+  font-weight: 500;
+  color: var(--dsw-alias-label-primary);
+}
+
+.headlineText {
+  margin: 0;
+  font: inherit;
+  text-align: center;
+}
+
+.brandName { color:var(--dsw-alias-brand-text); font-weight:600; }
+/* The welcome wordmark matches the platform's established green gradient. */
+@supports (background-clip:text) {
+  .brandName {
+    --wuyu-welcome-brand-start:#2eb64c;
+    --wuyu-welcome-brand-middle:#219671;
+    --wuyu-welcome-brand-end:#64b9a1;
+    background:linear-gradient(110deg,var(--wuyu-welcome-brand-start) 5%,var(--wuyu-welcome-brand-middle) 62%,var(--wuyu-welcome-brand-end));
+    background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  }
+}
+
+/* Keep hover detection on a stationary box while the mark moves within it;
+   hover rules target the hitbox so a slot-occupant mark swims too. */
+.fishHitbox {
+  grid-row: 1;
+  grid-column: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+/* The swim morph's curves poke slightly past the viewBox edges, so clipping
+   would slice the tail mid-wag. The hero mark stays in the same primary ink
+   as its headline. */
+.fish {
+  display: block;
+  overflow: visible;
+  transform-origin: 50% 60%;
+  color: var(--dsw-alias-label-primary);
+}
+
+/* Hover swim: a slow continuous sway about the body center — the head
+   (left) lifts as the whale rises, then settles back with a small
+   counter-tilt, like treading water. Negative rotation = head up (the head
+   is the left half; origin 50% 60%). */
+@keyframes hero-fish-swim {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  35% {
+    transform: rotate(-4deg) translate(-0.4px, -0.9px);
+  }
+
+  70% {
+    transform: rotate(1.6deg) translate(0.3px, 0.2px);
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .fishHitbox:hover .fish {
+    animation: hero-fish-swim 1.6s ease-in-out infinite;
+  }
+}
+
+/* Workspace row sits 12px above the input card (figma y80 → y112). */
+.body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  overflow: visible;
+}
+
+.body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Must beat `.body > :not(.glow)` specificity so the open Menu (and its
+   right-hand submenu) paints above the InputBar card. */
+.body > .workspaceRow {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  /* figma 75:8208 workspace row: px 8 above the card. */
+  padding-left: 8px;
+}
+
+/* Folder + label + chevron — transparent at rest; fill only on hover / open. */
+.workspace {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: min(100%, 360px);
+  min-height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.workspace:not(:disabled):hover,
+.workspace[aria-expanded='true'] {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+/* Locked form (bound guidance state): a static echo — no hover feedback, no
+   pointer affordance; label keeps full contrast. */
+.workspace:disabled {
+  cursor: default;
+}
+
+.folder {
+  flex: none;
+  color: var(--dsw-alias-label-primary);
+}
+
+.workspaceLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex: none;
+  color: var(--dsw-alias-label-caption);
+}
+
+/* Dialog field: 44 tall on the modal's 332 content column, r22, hairline
+   border, pad 14/7, 14/22 wt400 primary text, caption placeholder. Focus
+   keeps the resting border (design shows no focus ring). */
+.modalInput {
+  box-sizing: border-box;
+  width: 100%;
+  height: 44px;
+  padding: 7px 14px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: 22px;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.modalInput::placeholder {
+  color: var(--dsw-alias-label-caption);
+}
+
+.modalInput:disabled {
+  color: var(--dsw-alias-label-dimmed);
+}
+
+.modalAction {
+  min-width: 72px;
+}
+
+.modalError {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-state-error-primary);
+}
+
+@media(max-width:640px) { .root { padding:0 16px 16px; } .headline { font-size:24px; } .fishHitbox { display:none; } .subtitle { font-size:13px; line-height:1.8; margin-top:10px; } }

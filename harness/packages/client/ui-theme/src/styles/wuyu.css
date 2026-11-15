@@ -1,0 +1,68 @@
+/* Wuyu platform palette. Text aliases stay neutral, including selected and success states. */
+body {
+  --dsw-font-family: Arial, 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --dsw-alias-bg-base: #fff;
+  --dsw-alias-bg-module-platform: #f8f9fb;
+  --dsw-specific-sidebar-fill: #f8f9fb;
+  --dsw-specific-work-hero-cloud: radial-gradient(ellipse 46% 48% at 38% 38%, #e9f5ee99 0%, #f3faf655 48%, transparent 76%), radial-gradient(ellipse 32% 38% at 72% 48%, #e5f3ec66 0%, transparent 78%), #fff;
+  --dsw-alias-label-primary: #202124;
+  --dsw-alias-label-primary-foreground: #fff;
+  --dsw-alias-label-secondary: #374151;
+  --dsw-alias-label-tertiary: #6b7280;
+  --dsw-alias-label-caption: #6b7280;
+  --dsw-alias-label-primary-bluish: #374151;
+  --dsw-alias-brand-primary: #374151;
+  --dsw-alias-brand-text: #374151;
+  --dsw-alias-brand-primary-new-colorprimary-new-color: #374151;
+  --dsw-alias-button-primary-fill: #267957;
+  --dsw-alias-button-primary-hover: #1e6548;
+  --dsw-alias-button-info-fill: #267957;
+  --dsw-alias-button-info-hover: #1e6548;
+  --dsw-alias-border-l2: #e5e7eb;
+  --dsw-alias-border-l3: #e5e7eb;
+  --dsw-alias-border-l4: #d4d9de;
+  --dsw-alias-state-business-primary: #374151;
+  --dsw-alias-state-success-primary: #374151;
+  --dsw-alias-state-business-tertiary: #eef7f2;
+  --dsw-alias-interactive-bg-hover: #eef3f0;
+  --dsw-alias-interactive-bg-active: #e3f0e9;
+  --dsw-specific-bubble: #f0f5f2;
+  --dsw-specific-bubble-highlight: #dfede5;
+  --dsw-specific-sidebar-nav-item-active-accent: #e3f0e9;
+  --dsw-specific-sidebar-nav-item-active: #e9eeeb;
+  --dsw-specific-sidebar-nav-item-hover: #edf0ef;
+}
+
+/* Keep the existing appearance preference readable in both palettes. */
+body[data-ds-dark-theme] {
+  --dsw-alias-bg-base: #151b18;
+  --dsw-alias-bg-module-platform: #1b231e;
+  --dsw-specific-sidebar-fill: #19211c;
+  --dsw-specific-work-hero-cloud: radial-gradient(ellipse 46% 48% at 38% 38%, #28453544 0%, transparent 76%), #151b18;
+  --dsw-alias-label-primary: #f3f4f6;
+  --dsw-alias-label-primary-foreground: #fff;
+  --dsw-alias-label-secondary: #d1d5db;
+  --dsw-alias-label-tertiary: #9ca3af;
+  --dsw-alias-label-caption: #9ca3af;
+  --dsw-alias-label-primary-bluish: #d1d5db;
+  --dsw-alias-brand-primary: #d1d5db;
+  --dsw-alias-brand-text: #d1d5db;
+  --dsw-alias-button-primary-fill: #267957;
+  --dsw-alias-button-primary-hover: #1e6548;
+  --dsw-alias-button-info-fill: #267957;
+  --dsw-alias-button-info-hover: #1e6548;
+  --dsw-alias-border-l2: #34463b;
+  --dsw-alias-border-l3: #34463b;
+  --dsw-alias-border-l4: #496052;
+  --dsw-alias-state-business-primary: #d1d5db;
+  --dsw-alias-state-success-primary: #d1d5db;
+  --dsw-alias-brand-primary-new-colorprimary-new-color: #d1d5db;
+  --dsw-alias-state-business-tertiary: #243b2e;
+  --dsw-alias-interactive-bg-hover: #24342a;
+  --dsw-alias-interactive-bg-active: #2c4435;
+  --dsw-specific-bubble: #23372b;
+  --dsw-specific-bubble-highlight: #34513e;
+  --dsw-specific-sidebar-nav-item-active-accent: #2d4937;
+  --dsw-specific-sidebar-nav-item-active: #2a3b30;
+  --dsw-specific-sidebar-nav-item-hover: #25362b;
+}

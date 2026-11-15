@@ -1,0 +1,161 @@
+[
+  {
+    "name": "queued retry retains old incomplete draft",
+    "payload": {
+      "status": "queued",
+      "job": {
+        "status": "queued"
+      },
+      "conversation": {
+        "stage": "working"
+      },
+      "reading": {
+        "status": "draft_incomplete"
+      }
+    },
+    "expected": {
+      "titleKey": "row.event.requestQueued",
+      "state": "running"
+    }
+  },
+  {
+    "name": "running retry retains old incomplete draft",
+    "payload": {
+      "job": {
+        "status": "running"
+      },
+      "conversation": {
+        "stage": "working"
+      },
+      "reading": {
+        "status": "draft_incomplete"
+      }
+    },
+    "expected": {
+      "titleKey": "row.event.requestRunning",
+      "state": "running"
+    }
+  },
+  {
+    "name": "working stage has no job envelope",
+    "payload": {
+      "conversation": {
+        "stage": "working"
+      },
+      "reading": {
+        "status": "draft_incomplete"
+      }
+    },
+    "expected": {
+      "titleKey": "row.event.requestRunning",
+      "state": "running"
+    }
+  },
+  {
+    "name": "actual failed current job stays failed",
+    "payload": {
+      "job": {
+        "status": "failed"
+      },
+      "conversation": {
+        "stage": "working"
+      },
+      "reading": {
+        "status": "draft_incomplete"
+      }
+    },
+    "expected": {
+      "titleKey": "row.event.incomplete",
+      "state": "failed"
+    }
+  },
+  {
+    "name": "research-specific progress stays visible",
+    "payload": {
+      "job": {
+        "status": "running"
+      },
+      "conversation": {
+        "stage": "working"
+      },
+      "research": {
+        "mode": "web",
+        "status": "running"
+      },
+      "reading": {
+        "status": "draft_incomplete"
+      }
+    },
+    "expected": {
+      "titleKey": "row.event.web.running",
+      "state": "running"
+    }
+  },
+  {
+    "name": "inactive incomplete draft stays incomplete",
+    "payload": {
+      "conversation": {
+        "stage": "draft_review"
+      },
+      "reading": {
+        "status": "draft_incomplete"
+      }
+    },
+    "expected": {
+      "titleKey": "row.event.incomplete",
+      "state": "failed"
+    }
+  },
+  {
+    "name": "ready draft asks for review",
+    "payload": {
+      "conversation": {
+        "stage": "draft_review"
+      },
+      "reading": {
+        "status": "draft_ready"
+      }
+    },
+    "expected": {
+      "titleKey": "row.event.readingReview",
+      "state": "completed"
+    }
+  },
+  {
+    "name": "new job supersedes an earlier failed stage",
+    "payload": {
+      "job": {
+        "status": "queued"
+      },
+      "conversation": {
+        "stage": "failed"
+      },
+      "reading": {
+        "status": "draft_incomplete"
+      }
+    },
+    "expected": {
+      "titleKey": "row.event.requestQueued",
+      "state": "running"
+    }
+  },
+  {
+    "name": "transport failure still rejects an active payload",
+    "payload": {
+      "job": {
+        "status": "queued"
+      },
+      "conversation": {
+        "stage": "working"
+      },
+      "reading": {
+        "status": "draft_incomplete"
+      },
+      "__isError": true
+    },
+    "expected": {
+      "titleKey": "row.event.incomplete",
+      "state": "failed"
+    }
+  }
+]

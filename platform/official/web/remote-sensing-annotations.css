@@ -1,0 +1,58 @@
+.wuyu-rs-annotations{margin:22px 0 14px;border:1px solid #dfe9e3;border-radius:14px;background:#fbfdfb;color:var(--secondary,#505761);overflow:hidden}
+.wuyu-rs-annotation-action{display:flex;align-items:center;gap:10px;width:100%;padding:14px 17px;min-height:65px;text-align:left;font-size:14px;line-height:1.5;color:var(--secondary,#505761);border:0;background:transparent;border-radius:13px;cursor:pointer}
+.wuyu-rs-annotation-action:hover{background:#f1f7f1}
+.wuyu-rs-annotation-action>svg{color:var(--secondary,#505761)}
+.wuyu-rs-annotation-action-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.wuyu-rs-annotation-action-copy>strong{font-weight:600}
+.wuyu-rs-annotation-action-copy>small{font-size:12px;color:#748177;line-height:1.65;overflow-wrap:anywhere}
+.wuyu-rs-annotation-action>svg:last-child{transition:transform .15s ease}
+.wuyu-rs-annotation-action[aria-expanded=true]>svg:last-child{transform:rotate(180deg)}
+.wuyu-rs-annotation-panel[hidden]{display:none}
+.wuyu-rs-annotations-body{padding:2px 17px 17px}
+.wuyu-rs-annotation-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.wuyu-rs-review-badge,.wuyu-rs-risk{display:inline-flex;align-items:center;border-radius:6px;padding:4px 8px;font-size:12px;line-height:1.5}
+.wuyu-rs-review-badge{color:var(--secondary,#505761);background:#eef5ef;border:1px solid #dceadd}
+.wuyu-rs-risk-low{color:var(--secondary,#505761);background:#e8f2e9}
+.wuyu-rs-risk-medium{color:#765015;background:#fff3d9}
+.wuyu-rs-risk-high{color:#8d3030;background:#fce9e7}
+.wuyu-rs-risk-unknown{color:#61686b;background:#eef0f1}
+.wuyu-rs-annotations p.wuyu-rs-annotation-note{font-size:12px;line-height:1.75;color:#718076;margin:0 0 12px;overflow-wrap:anywhere}
+.wuyu-rs-annotations p.wuyu-rs-annotation-warning{font-size:13px;line-height:1.75;border:1px solid #e9dcbd;background:#fffaf0;color:#7c642b;border-radius:9px;padding:10px 12px;margin:0 0 12px}
+.wuyu-rs-annotation-toggle{display:inline-flex;align-items:center;gap:7px;color:var(--secondary,#505761);font-size:12px;cursor:pointer;margin:0 0 12px}
+.wuyu-rs-annotation-toggle input{accent-color:#367b54;width:15px;height:15px;margin:0}
+.wuyu-rs-image-card{width:100%;max-width:560px;margin:0 auto 13px;overflow:hidden;border:1px solid #dfe6df;border-radius:10px;background:#fff}
+.wuyu-rs-image-card>figcaption{display:flex;align-items:center;gap:12px;padding:9px 11px;color:var(--secondary,#505761);font-size:12px;background:#f6f9f6;line-height:1.6}
+.wuyu-rs-image-card>figcaption>span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.wuyu-rs-image-card>figcaption>a{margin-left:auto;flex-shrink:0}
+.wuyu-rs-image-card a,.wuyu-rs-original-links a{display:inline-flex;align-items:center;gap:5px;color:var(--secondary,#505761);text-decoration:none}
+.wuyu-rs-image-card a:hover,.wuyu-rs-original-links a:hover{text-decoration:underline}
+.wuyu-rs-image-frame{position:relative;width:100%;line-height:0;overflow:hidden;background:#edf1eb}
+.wuyu-rs-image-frame>img{display:block;width:100%;height:auto;object-fit:contain}
+.wuyu-rs-overlay{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;pointer-events:none}
+.wuyu-rs-region{pointer-events:auto;cursor:pointer;outline:none;--wuyu-rs-box-color:#1ce18b;--wuyu-rs-box-tint:rgba(28,225,139,.13);--wuyu-rs-label-color:#165a38}
+.wuyu-rs-region-risk-high{--wuyu-rs-box-color:#ff7979;--wuyu-rs-box-tint:rgba(255,121,121,.13);--wuyu-rs-label-color:#842d2d}
+.wuyu-rs-region-risk-medium{--wuyu-rs-box-color:#ffc14d;--wuyu-rs-box-tint:rgba(255,193,77,.13);--wuyu-rs-label-color:#715315}
+.wuyu-rs-region-risk-unknown{--wuyu-rs-box-color:#d7e5e1;--wuyu-rs-box-tint:rgba(215,229,225,.13);--wuyu-rs-label-color:#415f56}
+.wuyu-rs-box{fill:var(--wuyu-rs-box-tint);stroke:var(--wuyu-rs-box-color);stroke-width:2;stroke-dasharray:7 3}
+.wuyu-rs-region.is-selected .wuyu-rs-box,.wuyu-rs-region:focus-visible .wuyu-rs-box{stroke-width:3;stroke-dasharray:none;filter:drop-shadow(0 0 1px #1c3025)}
+.wuyu-rs-box-label-bg{fill:var(--wuyu-rs-label-color);stroke:none;opacity:.94}
+.wuyu-rs-region.is-selected .wuyu-rs-box-label-bg,.wuyu-rs-region:focus-visible .wuyu-rs-box-label-bg{opacity:1}
+.wuyu-rs-box-label,.wuyu-rs-box-risk-label{fill:#fff;font-family:Arial,'Microsoft YaHei',sans-serif;pointer-events:none}
+.wuyu-rs-box-label{font-weight:600}
+.wuyu-rs-image-error{padding:25px 15px;font-size:13px;line-height:1.8;color:#6a746d}
+.wuyu-rs-original-links{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;margin-bottom:12px}
+.wuyu-rs-region-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px;margin:0 0 12px}
+.wuyu-rs-region-choice{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:4px;padding:10px 12px;border:1px solid #dfe7e0;border-radius:9px;background:#fff;line-height:1.6;min-width:0}
+.wuyu-rs-region-choice>strong{font-size:12px;font-weight:600;color:var(--secondary,#505761)}
+.wuyu-rs-region-choice>span{font-size:13px;color:var(--secondary,#505761);overflow-wrap:anywhere}
+.wuyu-rs-region-choice>small{font-size:11px;color:#748177;overflow-wrap:anywhere}
+.wuyu-rs-region-choice:hover{border-color:#adcbb4;background:#f7fbf7}
+.wuyu-rs-region-choice.is-selected{border-color:#78a687;background:#f0f7f1;box-shadow:0 0 0 1px #78a687 inset}
+.wuyu-rs-region-details{font-size:12px;line-height:1.8;background:#f4f8f3;border-radius:9px;padding:10px 12px;margin:0}
+.wuyu-rs-region-details>div{display:grid;grid-template-columns:126px 1fr;gap:10px;margin:3px 0}
+.wuyu-rs-region-details dt{color:#70816f}
+.wuyu-rs-region-details dd{margin:0;color:var(--secondary,#505761);overflow-wrap:anywhere}
+.wuyu-rs-score-note{color:#7b8677;font-size:11px;margin-left:4px}
+.wuyu-rs-annotations button:focus-visible,.wuyu-rs-annotations a:focus-visible,.wuyu-rs-annotations summary:focus-visible,.wuyu-rs-annotations input:focus-visible{outline:2px solid #50795e;outline-offset:3px}
+@media(max-width:560px){.wuyu-rs-annotation-action{padding:12px;gap:8px}.wuyu-rs-annotation-action-copy>small{font-size:11px}.wuyu-rs-annotations-body{padding:2px 12px 12px}.wuyu-rs-region-details>div{grid-template-columns:1fr;gap:0;margin:6px 0}.wuyu-rs-image-card>figcaption{gap:8px}}
+@media(prefers-reduced-motion:reduce){.wuyu-rs-annotation-action>svg:last-child{transition:none}}

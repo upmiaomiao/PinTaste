@@ -1,0 +1,15 @@
+.root { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.chip, .number {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 34px;
+  padding: 0 10px; border: .5px solid var(--dsw-alias-border-l2); border-radius: 18px; corner-shape: round;
+  background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-secondary);
+  font: inherit; font-size: 13px; line-height: 20px;
+}
+.chip select, .number input { font: inherit; color: inherit; background: transparent; border: 0; }
+.chip select { max-width: 100px; cursor: pointer; }
+.number input { width: 48px; min-width: 0; }
+.chip:focus-within, .number:focus-within { box-shadow: 0 0 0 2px var(--dsw-alias-border-l3); }
+.number input:focus, .chip select:focus { outline: none; }
+.number input[aria-invalid="true"] { text-decoration: underline; }
+.chip select:disabled, .number input:disabled { opacity: .5; cursor: not-allowed; }
+.hint { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

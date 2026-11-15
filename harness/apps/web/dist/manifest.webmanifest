@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "无隅 · 工作",
+  "short_name": "无隅",
+  "start_url": "/work",
+  "scope": "/",
+  "display": "fullscreen",
+  "icons": [
+    {
+      "src": "/login/assets/wuyu-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

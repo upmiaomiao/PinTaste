@@ -1,0 +1,91 @@
+/* Source presentation categories are independent of acquisition strategy. */
+.source-picker-body .source-picker-intro,
+.source-picker-body .source-picker-purpose {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--wuyu-secondary);
+  margin: 0 0 16px;
+}
+.source-picker-body .source-picker-purpose {
+  color: var(--wuyu-text);
+}
+#source-picker-form .source-picker-group {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  margin: 22px 0 0;
+  padding: 16px 0 20px;
+  border-color: var(--wuyu-line);
+}
+#source-picker-form .source-picker-group legend {
+  color: var(--wuyu-text);
+  font-size: 16px;
+  line-height: 1.7;
+  font-weight: 600;
+}
+#source-picker-form .source-group-description,
+#source-picker-form .source-group-empty {
+  grid-column: 1 / -1;
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--wuyu-muted);
+}
+#source-picker-form .source-picker-choice {
+  margin: 0;
+  padding: 12px 14px;
+  min-width: 0;
+  border: 1px solid var(--wuyu-line);
+  border-radius: 12px;
+  background: var(--personal-surface, #fff);
+  color: var(--wuyu-text);
+}
+#source-picker-form .source-picker-choice:hover:not(:has(input:disabled)) {
+  background: var(--wuyu-hover);
+}
+#source-picker-form .source-picker-copy {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+#source-picker-form .source-picker-copy b {
+  color: inherit;
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 500;
+}
+#source-picker-form .source-picker-copy small {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--wuyu-muted);
+  margin-top: 4px;
+}
+#source-picker-form .source-picker-choice:has(input:checked) {
+  background: var(--wuyu-primary);
+  color: #fff;
+  border-color: var(--wuyu-primary);
+}
+#source-picker-form
+  .source-picker-choice:has(input:checked)
+  .source-picker-copy,
+#source-picker-form
+  .source-picker-choice:has(input:checked)
+  .source-picker-copy
+  small {
+  color: #fff;
+}
+#source-picker-form .source-picker-choice:has(input:disabled) {
+  cursor: not-allowed;
+}
+.source-picker-footer {
+  border-top: 1px solid var(--wuyu-line);
+  padding-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+}
+@media (max-width: 700px) {
+  #source-picker-form .source-picker-group {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #source-picker-form .source-picker-choice {
+    padding: 11px 12px;
+  }}

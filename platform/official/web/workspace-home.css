@@ -1,0 +1,90 @@
+/* Explicit selection marks keep the composer state clear in both themes. */
+.composer .mode-toggles{min-width:0}
+.composer .mode-toggles .tool{transition:background-color .15s,border-color .15s,color .15s}
+.composer .mode-toggles .tool:not(.selected){background:var(--paper);color:var(--secondary)!important;border-color:var(--line)}
+.composer .mode-toggles .tool.selected{background:#267957;border-color:#226d4e;color:#fff!important;font-weight:600;box-shadow:0 2px 5px #164e3020}
+.composer .mode-toggles .tool.selected>svg{color:#fff!important}
+.composer .mode-toggles .tool.selected:hover:not(:disabled){background:#1e6649;border-color:#1e6649;color:#fff!important}
+.composer .tool .tool-selection-check{width:14px;height:14px;stroke-width:3;flex-shrink:0}
+.composer .tool:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.composer .chat-model-picker select{min-width:0}
+.memory-options>label:has(input:checked){background:#e2f1e8;border:1px solid #267957;border-radius:11px}
+:root[data-theme=dark] .composer .mode-toggles .tool.selected{border-color:#71bf95;box-shadow:none}
+:root[data-theme=dark] .memory-options>label:has(input:checked){background:#203f31;border-color:#71bf95}
+
+/* Useful starting points take the place of the three isolated category pills. */
+.empty-chat .welcome{max-width:1060px;padding:clamp(34px,6.5vh,74px) 0 28px}
+.empty-chat .welcome h1{font-size:32px;line-height:1.5}
+.empty-chat .welcome-subtitle{font-size:16px;margin-top:12px}
+.empty-chat .welcome-composer{margin-top:28px}
+.welcome-topics{text-align:left;margin-top:32px}
+.welcome-topics-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:15px}
+.welcome-topics-heading h2{font-size:17px;line-height:1.5;font-weight:600;margin:0;color:var(--ink)}
+.welcome-topics-heading p{font-size:13px;line-height:1.5;color:var(--muted);margin:0}
+.welcome-topics-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.welcome-topic-card{min-width:0;border:1px solid var(--line);border-radius:18px;background:var(--paper);padding:20px;box-shadow:0 3px 14px #203d2f05}
+.welcome-topic-card>header{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+.welcome-topic-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:42px;height:42px;border-radius:12px;background:#e7f2eb;color:var(--secondary,#505761)}
+.welcome-topic-card h3{font-size:17px;font-weight:600;line-height:1.5;margin:0;color:var(--ink)}
+.welcome-topic-card header p{font-size:12px;line-height:1.7;margin:5px 0 0;color:var(--muted)}
+.welcome-topic-questions{display:grid;gap:8px}
+.welcome-topic-questions>button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-width:0;text-align:left;border:1px solid transparent;border-radius:11px;background:var(--canvas);padding:12px;color:var(--ink);transition:background-color .15s,border-color .15s}
+.welcome-topic-questions>button>span{min-width:0}
+.welcome-topic-questions strong{display:block;font-size:14px;font-weight:500;line-height:1.6;overflow-wrap:anywhere}
+.welcome-topic-questions small{display:block;font-size:12px;line-height:1.6;margin-top:3px;color:var(--muted)}
+.welcome-topic-questions svg{color:var(--secondary);flex-shrink:0}
+.welcome-topic-questions>button:hover:not(:disabled){background:#e9f4ed;border-color:#93bba5}
+.welcome-topic-questions>button:hover:not(:disabled) svg{color:var(--secondary,#505761)}
+.welcome-topic-questions>button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.welcome-topics-tip{display:flex;justify-content:center;align-items:center;gap:8px;font-size:12px;line-height:1.7;color:var(--muted);margin:18px 0 0}
+.welcome-topics-tip svg{flex-shrink:0;color:var(--secondary)}
+:root[data-theme=dark] .welcome-topic-icon{background:#203f31;color:var(--secondary,#505761)}
+:root[data-theme=dark] .welcome-topic-questions>button:hover:not(:disabled){background:#203f31;border-color:#71bf95}
+:root[data-theme=dark] .welcome-topic-questions>button:hover:not(:disabled) svg{color:var(--secondary,#505761)}
+@media(max-width:900px){.empty-chat .welcome{padding-top:40px}.welcome-topics-grid{gap:10px}.welcome-topic-card{padding:14px}.welcome-topic-card>header{gap:9px;flex-direction:column}.welcome-topic-questions>button{padding:10px}}
+@media(max-width:720px){.composer .composer-tools{flex-wrap:wrap;align-items:center;row-gap:10px}.composer .mode-toggles{flex:1 1 100%;max-width:100%;gap:7px}.composer .send-area{margin-left:auto}.empty-chat .welcome h1{font-size:27px}.welcome-topics-grid{grid-template-columns:1fr}.welcome-topic-card>header{flex-direction:row;align-items:center;margin-bottom:12px}.welcome-topic-questions{grid-template-columns:1fr 1fr}.welcome-topics-heading{align-items:flex-start;flex-direction:column;gap:4px}.welcome-topics-tip{align-items:flex-start;justify-content:flex-start}}
+@media(max-width:450px){.empty-chat .welcome{padding-top:28px}.empty-chat .welcome h1{font-size:23px}.empty-chat .welcome-subtitle{font-size:13px}.empty-chat .welcome-composer{margin-top:22px}.welcome-topics{margin-top:26px}.welcome-topic-card{padding:16px}.welcome-topic-questions{grid-template-columns:1fr}.welcome-topics-heading h2{font-size:16px}.welcome-topics-heading p{font-size:12px}.welcome-topic-card header p{font-size:12px}.composer .chat-model-picker{max-width:100%}.composer .mode-toggles .tool{font-size:12px}.composer .mode-toggles .tool .tool-selection-check{width:12px;height:12px}.welcome-topics-tip{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.composer .mode-toggles .tool,.welcome-topic-questions>button{transition:none}}
+
+/* Quiet mint light keeps the entry screen focused on the conversation. */
+.main{background:var(--paper)}
+.conversation.empty-chat{display:flex;flex-direction:column;background:radial-gradient(ellipse 56% 52% at 53% 57%,#cee7d7a6 0%,#e1eee459 48%,#f9fbf900 84%),#fafbf9}
+.empty-chat .welcome{width:100%;max-width:1000px;min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:52px 0 96px;margin:0 auto}
+.empty-chat .welcome h1{font-size:clamp(27px,2.7vw,38px);font-weight:450;letter-spacing:-.5px;line-height:1.5;color:var(--ink)}
+.empty-chat .welcome-composer{max-width:900px;margin:34px auto 0;padding:0 20px}
+.empty-chat .composer{border-color:#e5e9e6;box-shadow:0 5px 24px #253c2d08;background:var(--paper)}
+.empty-chat .composer textarea{font-size:18px}
+:root[data-theme=dark] .conversation.empty-chat{background:radial-gradient(ellipse 56% 52% at 53% 57%,#30463866 0%,#26392c33 48%,#16171900 84%),var(--canvas)}
+@media(max-width:720px){.empty-chat .welcome{justify-content:flex-start;padding:48px 0 72px}.empty-chat .welcome-composer{padding:0;margin-top:28px}.empty-chat .welcome h1{font-size:27px}.empty-chat .composer textarea{font-size:17px}}
+@media(max-width:450px){.empty-chat .welcome{padding:36px 0 64px}.empty-chat .welcome h1{font-size:24px}}
+
+.empty-chat .welcome-composer textarea{min-height:58px}
+.empty-chat .composer-tools{margin-top:8px}
+@media(max-width:720px){.composer .composer-tools{flex-wrap:wrap}.empty-chat .welcome-composer textarea{min-height:58px}}
+
+/* The original inline tools and compact, illustrated starting points. */
+.composer .mode-toggles{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.welcome-tasks{width:100%;max-width:calc(100% - 40px);margin:24px auto 0;text-align:left}
+.welcome-task-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.welcome-task{display:flex;align-items:flex-start;flex-direction:column;min-width:0;min-height:170px;padding:20px;border:1px solid #e4e8e7;border-radius:21px;background:#ffffffd9;text-align:left;color:var(--ink);box-shadow:0 3px 14px #20332903;transition:transform .18s,box-shadow .18s,border-color .18s}
+.welcome-task:hover:not(:disabled){transform:translateY(-2px);border-color:#cbd3d0;box-shadow:0 9px 24px #20332909}
+.welcome-task:focus-visible,.welcome-task-refresh:focus-visible{outline:2px solid #788592;outline-offset:4px}
+.welcome-task-logo{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;flex-shrink:0;width:46px;height:46px;margin-bottom:18px;border-radius:14px;color:white;box-shadow:0 5px 12px #26354c19,inset 0 1px 0 #ffffff80;overflow:hidden}
+.welcome-task-logo:before{content:"";position:absolute;z-index:-1;inset:2px 7px 23px 2px;border-radius:11px;background:linear-gradient(145deg,#ffffff70,#ffffff00);transform:rotate(-18deg)}
+.welcome-task-logo.blue{background:linear-gradient(145deg,#9fc2ff,#6c99e9)}
+.welcome-task-logo.violet{background:linear-gradient(145deg,#c2b3ff,#9788ed)}
+.welcome-task-logo.amber{background:linear-gradient(145deg,#f6d88a,#dfa749)}
+.welcome-task-logo.mint{background:linear-gradient(145deg,#b4dacf,#75ad9d)}
+.welcome-task>strong{display:block;font-size:17px;line-height:1.5;font-weight:600;letter-spacing:.1px;color:var(--ink)}
+.welcome-task-copy{display:block;width:100%;margin-top:6px;font-size:13px;line-height:1.6;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.welcome-task-refresh{display:flex;align-items:center;gap:6px;margin:13px 0 0 auto;padding:5px 0 5px 10px;border:0;background:transparent;color:var(--muted);font-size:13px;line-height:1.5}
+.welcome-task-refresh:hover:not(:disabled){color:var(--ink)}
+.welcome-task:disabled,.welcome-task-refresh:disabled{opacity:.55;cursor:default}
+:root[data-theme=dark] .welcome-task{background:#202326de;border-color:#353b3b;box-shadow:none}
+:root[data-theme=dark] .welcome-task:hover:not(:disabled){border-color:#66716d;background:#272c2c}
+@media(max-width:1100px){.welcome-tasks{max-width:calc(100% - 40px)}.welcome-task{padding:17px;min-height:158px}}
+@media(max-width:720px){.welcome-tasks{max-width:100%;margin-top:20px}.welcome-task-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.welcome-task{min-height:150px;padding:17px;border-radius:18px}.welcome-task-logo{width:42px;height:42px;margin-bottom:13px}.welcome-task>strong{font-size:16px}.welcome-task-copy{display:-webkit-box;white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:12px}.welcome-task-refresh{font-size:12px}.composer .mode-toggles{gap:7px}}
+@media(prefers-reduced-motion:reduce){.welcome-task{transition:none}.welcome-task:hover:not(:disabled){transform:none}}
+@media(max-height:760px) and (min-width:721px){.empty-chat .welcome{justify-content:flex-start;padding-top:40px;padding-bottom:40px}}
+/* Only the welcome wordmark uses the original brand gradient. */
+.empty-chat .welcome h1>span{background:linear-gradient(110deg,#2eb64c 5%,#219671 62%,#64b9a1);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent}

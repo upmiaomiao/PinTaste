@@ -1,0 +1,24 @@
+[Unit]
+Description=Wuyu Jianwei remote sensing Harness
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/wuyu-jianweirs/current
+Environment=PYTHONUTF8=1
+Environment=WUYU_NODE_PATH=/opt/node/bin/node
+Environment=WUYU_AUTH_MODE=wuyu
+Environment=WUYU_IDENTITY_URL=http://127.0.0.1:8920
+ExecStart=/opt/wuyu-jianweirs/current/.venv/bin/python /opt/wuyu-jianweirs/current/scripts/deploy/jianweirs_server.py --env-file /opt/wuyu-jianweirs/shared/service.env --output-dir /opt/wuyu-jianweirs/shared/portal --host 172.17.0.1 --port 8170 --root-path /jianweirs
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/wuyu-jianweirs/shared
+
+[Install]
+WantedBy=multi-user.target

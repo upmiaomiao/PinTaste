@@ -1,0 +1,6 @@
+.wuyu-history-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0}
+.wuyu-history-controls label{font-size:13px}.wuyu-history-controls select{max-width:100%;font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--canvas);color:inherit}
+.wuyu-history-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:16px;align-items:start}
+.wuyu-history-card{min-width:0;border:1px solid var(--line);border-radius:12px;padding:14px;overflow:hidden}.wuyu-history-card h3{font-size:14px;margin:0;overflow-wrap:anywhere}.wuyu-history-card .content-title{gap:8px;flex-wrap:wrap}.wuyu-history-card .status-chip{flex:none}.wuyu-history-card>small{display:block;margin:8px 0;opacity:.7}
+.wuyu-history-image{aspect-ratio:16/9;display:grid;place-items:center;background:var(--canvas);border-radius:8px;overflow:hidden}.wuyu-history-image img{width:100%;height:100%;object-fit:contain}.wuyu-history-image [hidden]{display:none}.wuyu-history-image p{font-size:12px;padding:10px;line-height:1.6}
+.wuyu-history-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}.wuyu-history-actions a{font-size:13px}.wuyu-history-pagination{display:flex;gap:12px;align-items:center;justify-content:center;margin:20px 0;flex-wrap:wrap}
