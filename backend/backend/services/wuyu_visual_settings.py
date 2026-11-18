@@ -3,11 +3,26 @@ from copy import deepcopy
 import json
 
 FOLLOW_TEMPLATE_STYLE = '跟随已确认模板'
+TEMPLATE_SAFE_CATEGORIES = {'integration', 'expression'}
 
 
 def follows_template(body):
     return ((body.get('template_choice') or {}).get('style_mode') == 'template'
             and body.get('brief', {}).get('style') == FOLLOW_TEMPLATE_STYLE)
+
+
+def template_safe_design_memory(context):
+    """Design memory allowed under a confirmed template.
+
+    Only typed habits about content integration and expression survive. Layout
+    habits and legacy rules without a category would fight the template's look.
+    """
+    if not isinstance(context, dict) or not isinstance(context.get('rules'), list):
+        return {}
+    rules = [rule for rule in context['rules'] if isinstance(rule, dict) and rule.get('category') in TEMPLATE_SAFE_CATEGORIES]
+    if not rules:
+        return {}
+    return {key: rules if key == 'rules' else deepcopy(value) for key, value in context.items() if key in {'version', 'rules', 'priority'}}
 
 
 def effective_visual_settings(body, confirmed):
@@ -28,7 +43,8 @@ def apply_template_visual_settings(prompt, settings):
         return prompt
     value = json.loads(prompt)
     value['effective_visual_settings'] = deepcopy(settings)
-    value['design_preferences'] = {}  # Old RAG defaults cannot restore the replaced style.
+    # Old RAG defaults cannot restore the replaced style; content and expression habits still apply.
+    value['design_preferences'] = template_safe_design_memory(value.get('design_preferences'))
     task = value.get('task', '')
     task = task.replace(
         'Current feedback and explicit design_requirements override conflicting palettes, typography and decoration in every style reference, including the edit original and approved samples. ',

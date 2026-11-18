@@ -1,0 +1,31 @@
+/* Personal design habits: reuses the settings surfaces, tokens and type scale of neutral.css. */
+.design-habits .habit-toolbar{margin:4px 0 22px}
+.habit-section{border-top:1px solid var(--line);padding-top:16px;margin-top:8px}
+.user-settings-content .habit-section>h3{display:flex;align-items:center;gap:8px;margin-bottom:0}
+.habit-section>h3>small{font-size:12px;font-weight:400;color:var(--muted)}
+.habit-section>.settings-note-text{margin:4px 0 12px}
+.habit-list{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:10px}
+.habit-item{border:1px solid var(--line);border-radius:13px;padding:14px 16px;background:var(--paper)}
+.habit-item[data-inactive]{background:var(--hover)}
+.habit-item[data-inactive] .habit-rule{color:var(--secondary)}
+.habit-rule{display:flex;align-items:flex-start;gap:7px;font-size:14px;line-height:1.7;margin:0 0 10px;overflow-wrap:anywhere}
+.habit-rule>svg{flex:none;margin-top:5px;color:var(--secondary)}
+.habit-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.habit-meta .role-badge{margin-left:0;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.habit-evidence,.habit-none,.habit-count{font-size:12px;color:var(--muted)}
+.habit-none{margin:0 0 14px}
+.habit-count{align-self:flex-end}
+.habit-actions{display:flex;align-items:center;gap:2px;margin-left:auto}
+.habit-actions .secondary{padding:6px 12px;font-size:13px;margin-right:4px}
+.habit-actions .icon-button{width:32px;height:32px}
+.habit-actions .icon-button:disabled{opacity:.5;cursor:not-allowed}
+.habit-confirm{display:flex;flex-wrap:wrap;align-items:center;gap:10px;border-top:1px solid var(--line);margin-top:12px;padding-top:12px;font-size:13px;color:var(--secondary)}
+.habit-confirm>span{flex:1 1 220px}
+.habit-confirm .secondary{padding:6px 12px;font-size:13px}
+.habit-form{border:1px solid var(--line);border-radius:13px;padding:16px;margin:4px 0 22px}
+.user-settings-content .habit-form>h3{margin:0}
+.habit-form>.settings-note-text{margin:0}
+.habit-form textarea{width:100%;border:1px solid var(--line);background:var(--paper);padding:11px 12px;border-radius:10px;color:var(--ink);font:inherit;font-size:14px;line-height:1.7;resize:vertical}
+.habit-reset{border-top:1px solid var(--line);padding-top:16px;margin-top:8px}
+.habit-reset .habit-form{margin-bottom:0}
+@media(max-width:700px){.habit-actions{margin-left:0;flex-basis:100%}}

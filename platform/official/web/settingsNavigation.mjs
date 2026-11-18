@@ -1,4 +1,6 @@
-export const personalSettingsTabs=['general','account','work','linked','data','about'];
+export const personalSettingsTabs=['general','account','work','habits','linked','data','about'];
+/** Design habits belong to the work service, so the page follows the account's work permission. */
+export function visiblePersonalSettingsTabs(user){return personalSettingsTabs.filter(tab=>tab!=='habits'||user?.permissions?.work===true);}
 export function canManageWorkQuota(user){return user?.role==='admin'||user?.permissions?.work_quota_admin===true;}
 export function canOpenSystemManagement(user){return user?.role==='admin'||canManageWorkQuota(user);}
 export function settingsDestination(search,user){

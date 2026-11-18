@@ -217,6 +217,12 @@ class TemplateConfiguration:
         from services.wuyu_design_memory import current_design_context
         if current_design_context.get() and recipe['visual_settings']['style_mode'] != 'template':
             recipe['design_memory'] = deepcopy(current_design_context.get())
+        elif current_design_context.get():
+            # A confirmed template owns the look; only content and expression habits pass.
+            from services.wuyu_visual_settings import template_safe_design_memory
+            kept = template_safe_design_memory(current_design_context.get())
+            if kept:
+                recipe['design_memory'] = deepcopy(kept)
         recipe['project_id'] = body['workflow']['project_id']
         requested = [recipe.get('style_anchor')] + recipe.get('references', [])
         ids = {r if isinstance(r, str) else r.get('page_id') or r.get('source_id') for r in requested if r}

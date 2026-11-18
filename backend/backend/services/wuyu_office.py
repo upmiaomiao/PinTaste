@@ -462,7 +462,55 @@ class OfficeMixin:
             return True
 
         applied, _ = self._mutate(project_id, op)
+        self._capture_manual_edit(project_id, body, source, data, changed, artifact_id, user_id)
         return {'saved': True, 'current': applied, 'artifact_id': artifact_id, 'edited_pages': changed}
+
+    def _capture_manual_edit(self, project_id, body, source, data, changed, artifact_id, user_id=None):
+        """Record what the owner changed by hand as design events (one per changed page).
+
+        Runs after the save is committed and is best effort: a missing or unavailable habit store, a diff
+        problem or a database error is logged and swallowed, so saving an edit never fails because of it.
+        Edits by anyone but the project owner (an administrator helping out) say nothing about the owner's
+        habits and are not recorded.
+        """
+        try:
+            extensions = getattr(self.app, 'extensions', None) or {}
+            habits = extensions.get('wuyu_design_habits')
+            if habits is None or getattr(habits, 'available', True) is False or changed == []:
+                return
+            memory = extensions.get('wuyu_design_memory')
+            if memory is not None and not memory.policy()['settings']['capture_enabled']:
+                return
+            import json
+            from models import db, Project
+            project = db.session.get(Project, project_id)
+            if project is None or not project.user_id or (user_id and user_id != project.user_id):
+                return
+            if habits.paused(project.user_id):
+                return
+            from .wuyu_edit_diff import diff_decks
+            entries = diff_decks(self._artifact_file(body, 'artifact:' + source['id']), bytes(data), pages=changed)
+            for entry in entries:
+                page, changes = entry.get('page'), list(entry.get('changes') or [])
+                payload = {'changes': changes, 'base_artifact_id': source['id'], 'artifact_id': artifact_id}
+                # The event store caps a payload at 16000 characters, measured the way it stores them
+                # (unescaped); drop trailing changes to stay inside it and say so.
+                while changes and len(json.dumps(payload, ensure_ascii=False)) > 15000:
+                    changes.pop()
+                    payload['truncated'] = True
+                if not changes:
+                    continue
+                try:
+                    habits.record_event(owner_id=project.user_id, project_id=project_id, kind='manual_edit',
+                                        payload=payload, page_number=page, commit=True,
+                                        request_key='manual:%s:%s' % (artifact_id, 'structure' if page is None else page))
+                except Exception:
+                    db.session.rollback()
+                    raise
+        except Exception as exc:  # memory capture must never break the save
+            import logging
+            logger = getattr(self.app, 'logger', None) or logging.getLogger(__name__)
+            logger.warning('Manual edit capture skipped: project=%s type=%s', project_id, type(exc).__name__)
 
 
 # ---------------------------------------------------------------- editor page

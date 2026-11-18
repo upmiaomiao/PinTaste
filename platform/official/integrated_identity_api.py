@@ -104,6 +104,36 @@ class DesignReviewInput(Input):
     action: Literal['activate', 'disable']
 
 
+HabitScope = dict[Literal['purpose', 'page_role', 'content_type'], str]
+
+
+class DesignHabitInput(Input):
+    category: Literal['integration', 'layout', 'expression']
+    slot: str = Field(pattern=r'^[a-z][a-z0-9_]{0,59}$')
+    rule: str = Field(min_length=1, max_length=300)
+    scope: HabitScope | None = None
+    value: dict | None = None
+    pinned: StrictBool | None = None
+
+
+class DesignHabitPatchInput(Input):
+    version: int = Field(ge=1, strict=True)
+    rule: str | None = Field(default=None, min_length=1, max_length=300)
+    scope: HabitScope | None = None
+    value: dict | None = None
+    pinned: StrictBool | None = None
+    paused: StrictBool | None = None
+    status: Literal['active', 'revoked'] | None = None
+
+
+class DesignHabitSettingsInput(Input):
+    paused: StrictBool
+
+
+class DesignHabitResetInput(Input):
+    confirm: StrictBool
+
+
 def invoke(action):
     try:
         return action()
@@ -478,6 +508,73 @@ def design_memory_compile(body: DesignCompileInput, request: Request, user=Depen
 @router.post('/api/admin/work/design-memory/review')
 def design_memory_review(body: DesignReviewInput, request: Request, user=Depends(auth.admin)):
     return design_admin_request(request, 'POST', '/review', body.model_dump())
+
+
+def design_habits_request(request, user, method, path='', payload=None):
+    """Personal design habits: the caller's own work principal, never an administrator token."""
+    def action():
+        identity.require_feature(user, 'work')
+        if payload is not None:
+            scope, value = payload.get('scope') or {}, payload.get('value')
+            if any(not 1 <= len(item.strip()) <= 60 for item in scope.values()):
+                raise identity.IdentityError('INVALID_HABIT_SCOPE', 400)
+            # Escaped length, as the work service measures it.
+            if value is not None and len(json.dumps(value)) > 2000:
+                raise identity.IdentityError('INVALID_HABIT_VALUE', 400)
+        token = bridge.work_token(session_hash(request))
+        return bridge.request(method, '/api/design-memory/habits' + path, payload, token=token).get('data', {})
+    return invoke(action)
+
+
+def design_habit_path(habit_id):
+    if not re.fullmatch(r'[A-Za-z0-9-]{1,36}', habit_id):
+        raise HTTPException(400, 'INVALID_HABIT_ID')
+    return '/' + habit_id
+
+
+@router.get('/api/work/design-habits')
+def design_habits(request: Request, user=Depends(auth.current)):
+    return design_habits_request(request, user, 'GET')
+
+
+@router.post('/api/work/design-habits')
+def design_habit_create(body: DesignHabitInput, request: Request, user=Depends(auth.current)):
+    return design_habits_request(request, user, 'POST', '', body.model_dump(exclude_none=True))
+
+
+@router.get('/api/work/design-habits/export')
+def design_habits_export(request: Request, user=Depends(auth.current), cursor: str | None = None):
+    """One page of the caller's data. An answer with "next" continues with ?cursor=<next>, so no single
+    answer has to exceed what the bridge carries. The bridge forwards no query strings, so the position
+    goes to the work service as a path segment."""
+    if cursor is not None and not re.fullmatch(r'[he]\.\d{8}T\d{6}\.\d{6}\.[0-9a-f-]{36}', cursor):
+        raise HTTPException(400, 'INVALID_EXPORT_CURSOR')
+    return design_habits_request(request, user, 'GET', '/export' + ('/' + cursor if cursor else ''))
+
+
+@router.put('/api/work/design-habits/settings')
+def design_habits_settings(body: DesignHabitSettingsInput, request: Request, user=Depends(auth.current)):
+    return design_habits_request(request, user, 'PUT', '/settings', body.model_dump())
+
+
+@router.post('/api/work/design-habits/reset')
+def design_habits_reset(body: DesignHabitResetInput, request: Request, user=Depends(auth.current)):
+    if body.confirm is not True:
+        raise HTTPException(400, 'CONFIRMATION_REQUIRED')
+    return design_habits_request(request, user, 'POST', '/reset', {'confirm': True})
+
+
+@router.patch('/api/work/design-habits/{habit_id}')
+def design_habit_update(habit_id: str, body: DesignHabitPatchInput, request: Request, user=Depends(auth.current)):
+    payload = body.model_dump(exclude_none=True)
+    if len(payload) < 2:
+        raise HTTPException(400, 'EMPTY_HABIT_PATCH')
+    return design_habits_request(request, user, 'PATCH', design_habit_path(habit_id), payload)
+
+
+@router.delete('/api/work/design-habits/{habit_id}')
+def design_habit_delete(habit_id: str, request: Request, user=Depends(auth.current)):
+    return design_habits_request(request, user, 'DELETE', design_habit_path(habit_id))
 
 
 @router.get("/api/history")

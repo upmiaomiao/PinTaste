@@ -165,10 +165,28 @@ class DesignMemoryService:
         project = db.session.get(Project, project_id)
         if project is None or not project.user_id:
             return
+        habits = self.app.extensions.get('wuyu_design_habits')
+        if habits and habits.paused(project.user_id):
+            # The owner paused design habits: nothing is kept for learning, in either store.
+            return
         key = hashlib.sha256((project_id + ':' + str(request_key)).encode()).hexdigest()
         if not DesignFeedback.query.filter_by(request_key=key).first():
             db.session.add(DesignFeedback(owner_id=project.user_id, project_id=project_id,
                 request_key=key, action=action, text=text[:64000], signals=dumps(signals(text))))
+        if habits:
+            try:
+                # Raw material for later habit inference; kept even when no keyword signal matched.
+                # Only a page revision names a page; other actions may carry an unrelated client "number".
+                habits.record_event(project.user_id, project_id, 'text_feedback', {'action': action, 'text': text[:6000]},
+                    context=habits.context_for(body.get('brief')),
+                    page_number=payload.get('number') if action == 'revise_page' else None,
+                    request_key='event:' + key, commit=False)
+            except SQLAlchemyError:
+                # A database error leaves the caller's transaction unusable; the workflow's own
+                # rollback-and-replay handling must see it instead of a later PendingRollbackError.
+                raise
+            except Exception as exc:
+                self.app.logger.warning('DESIGN_EVENT_CAPTURE_SKIPPED type=%s', type(exc).__name__)
 
     def mark_supported(self, project_id):
         """Only a fully native, current exported deck supports long-lived rules."""
@@ -350,10 +368,25 @@ class DesignMemoryService:
         db.session.commit()
         return self.admin_view()
 
+    def _habit_rules(self, owner_id, query, cfg):
+        habits = self.app.extensions.get('wuyu_design_habits')
+        if not habits or not cfg['personal_enabled']:
+            return []
+        try:
+            # Job creation passes the brief as JSON; a plain-text query has no context.
+            brief = json.loads(query)
+        except ValueError:
+            brief = None
+        return [{'id': 'habit:' + item['id'], 'rule': item['rule'], 'rule_set_id': 'habit', 'scope': 'personal',
+                 'category': item['category'], 'slot': item['slot']} for item in habits.active_for(owner_id, habits.context_for(brief))]
+
     def retrieve(self, owner_id, query, *, include_system=True):
         cfg = self.policy()['settings']
         rows = []
-        if cfg['personal_enabled']:
+        habits = self.app.extensions.get('wuyu_design_habits')
+        # "Pause all design habits" covers everything personal, including rules learned by the older keyword memory.
+        personal = cfg['personal_enabled'] and not (habits and habits.paused(owner_id))
+        if personal:
             rows.extend(DesignRuleSet.query.filter_by(scope='personal', owner_id=owner_id, status='active').all())
         if include_system and cfg['system_enabled']:
             rows.extend(DesignRuleSet.query.filter_by(scope='system', status='active').all())
@@ -362,7 +395,7 @@ class DesignMemoryService:
             for rule in json.loads(row.body)['rules']:
                 overlap = len(query_terms & terms(rule['rule']))
                 candidates.append((row.scope == 'personal', overlap, row.created_at, {'id': rule['id'], 'rule': rule['rule'], 'rule_set_id': row.id, 'scope': row.scope}))
-        if cfg['personal_enabled']:
+        if personal:
             seen=set()
             for row in DesignFeedback.query.filter_by(owner_id=owner_id,supported=True).order_by(DesignFeedback.created_at.desc(),DesignFeedback.id.desc()).limit(100).all():
                 accepted=set(json.loads(row.signals))
@@ -380,7 +413,8 @@ class DesignMemoryService:
         unique = {}
         for *_, rule in candidates:
             unique.setdefault(rule['id'], rule)
-        return {'version': 1, 'rules': list(unique.values())[:cfg['retrieval_limit']],
+        # Explicit habits lead and have their own cap; they do not consume retrieval_limit.
+        return {'version': 1, 'rules': self._habit_rules(owner_id, query, cfg) + list(unique.values())[:cfg['retrieval_limit']],
                 'priority': 'Current explicit requirements > personal design preferences > approved system design preferences > template visual defaults. Preferences contain no project evidence or factual claims.'}
 
     @staticmethod
@@ -413,7 +447,10 @@ class DesignMemoryService:
 
         if cfg['personal_enabled'] and cfg['personal_auto_compile']:
             owners = db.session.query(DesignFeedback.owner_id).filter_by(supported=True).distinct().limit(1000).all()
+            habits = self.app.extensions.get('wuyu_design_habits')
             for (owner_id,) in owners:
+                if habits and habits.paused(owner_id):
+                    continue  # Nothing is learned for an owner who paused design habits.
                 latest = DesignCompileRun.query.filter_by(scope='personal', owner_id=owner_id).order_by(DesignCompileRun.created_at.desc()).first()
                 count = DesignFeedback.query.filter_by(owner_id=owner_id, supported=True).filter(DesignFeedback.created_at > latest.created_at).count() if latest else DesignFeedback.query.filter_by(owner_id=owner_id, supported=True).count()
                 if count < cfg['personal_min_feedback']:
@@ -467,6 +504,9 @@ def init_design_memory(app):
                 model.__table__.create(db.engine, checkfirst=True)
         elif not all(inspect(db.engine).has_table(model.__tablename__) for model in models):
             raise RuntimeError('Design memory schema must already exist; migrations are a separate operation')
+    # Imported here so the habit tables never join the boot-time schema check of an un-migrated database.
+    from .wuyu_design_habits import init_design_habits
+    init_design_habits(app)
     from .wuyu_personal_templates import PersonalTemplates
     app.extensions['wuyu_personal_templates'] = PersonalTemplates(app)
     if not app.testing and os.getenv('WUYU_MIGRATION_PROCESS') != '1' and not app.config.get('WUYU_DESIGN_SCHEDULER_DISABLED'):

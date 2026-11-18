@@ -1,11 +1,12 @@
 import {t,getUiLanguage} from './i18n.mjs';
 import React,{useState,useEffect,useRef} from 'react';
-import {Settings,UserRound,Database,Info,Sun,Moon,Monitor,X,Check,Download,LogOut,Save,LoaderCircle,Type,Keyboard,FileText,HardDrive} from 'lucide-react';
+import {Settings,UserRound,Database,Info,Sun,Moon,Monitor,X,Check,Download,LogOut,Save,LoaderCircle,Type,Keyboard,FileText,HardDrive,SlidersHorizontal} from 'lucide-react';
 import {Logo} from './ChatParts';
 import {api} from './api';
 import {defaultPreferences} from './preferences';
 import {WorkAccountSettings,LinkWorkAccount} from './IntegratedPlatform';
-import {canOpenSystemManagement} from './settingsNavigation.mjs';
+import {canOpenSystemManagement,visiblePersonalSettingsTabs} from './settingsNavigation.mjs';
+import DesignHabits from './DesignHabits';
 
 /** A one-use code from an administrator becomes long-term work points. */
 function RedeemCode({onRedeemed}){
@@ -21,9 +22,10 @@ function RedeemCode({onRedeemed}){
   {result?<p className="form-note" role="status">{result}</p>:null}{failure?<p className="form-error" role="alert">{t(failure)}</p>:null}</form>;
 }
 
-const tabs=[['general','通用设置',Settings],['account','账号管理',UserRound],['work','工作与额度',FileText],['linked','关联原账号',UserRound],['data','数据管理',Database],['about','关于平台',Info]];
+const tabs=[['general','通用设置',Settings],['account','账号管理',UserRound],['work','工作与额度',FileText],['habits','我的设计习惯',SlidersHorizontal],['linked','关联原账号',UserRound],['data','数据管理',Database],['about','关于平台',Info]];
 export default function UserSettings({user,initialTab='general',prefs,onUser,onClose,onLogout,onAdmin,context='chat'}){
- const [tab,setTab]=useState(initialTab),[profile,setProfile]=useState({name:user.name,organization:user.organization,identity:user.identity}),[identities,setIdentities]=useState([]),[saving,setSaving]=useState(false),[error,setError]=useState(''),[note,setNote]=useState(''),[quotaRefresh,setQuotaRefresh]=useState(0),[includeFiles,setIncludeFiles]=useState(false),[download,setDownload]=useState('');
+ const shownTabs=visiblePersonalSettingsTabs(user),visibleTabs=tabs.filter(([id])=>shownTabs.includes(id));
+ const [tab,setTab]=useState(shownTabs.includes(initialTab)?initialTab:'general'),[profile,setProfile]=useState({name:user.name,organization:user.organization,identity:user.identity}),[identities,setIdentities]=useState([]),[saving,setSaving]=useState(false),[error,setError]=useState(''),[note,setNote]=useState(''),[quotaRefresh,setQuotaRefresh]=useState(0),[includeFiles,setIncludeFiles]=useState(false),[download,setDownload]=useState('');
  const dialog=useRef(null),close=useRef(onClose);close.current=onClose;
  const [usage,setUsage]=useState({userId:user.id,status:'loading',data:null,error:''});
  const currentUser=useRef(user.id),usageRequest=useRef({id:0,abort:null});currentUser.current=user.id;
@@ -43,7 +45,7 @@ export default function UserSettings({user,initialTab='general',prefs,onUser,onC
  const p=prefs.preferences,disabled=prefs.saving||!prefs.ready;
  return <div className="user-settings-scrim" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><section className="user-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="user-settings-title" ref={dialog}>
  <header><h2 id="user-settings-title">{t("系统设置")}</h2><button className="icon-button" aria-label={t("关闭系统设置")} onClick={onClose}><X size={20}/></button></header>
- <div className="user-settings-body"><nav aria-label={t("个人设置分类")}>{tabs.map(([id,label,Icon])=><button key={id} aria-current={id===tab?'page':undefined} onClick={()=>{setTab(id);setError('');setNote('');}}><Icon size={18}/>{t(label)}</button>)}{canOpenSystemManagement(user)&&onAdmin?<button type="button" onClick={()=>onAdmin(user.role==='admin'?'overview':'quota')}><Settings size={18}/>{t("系统管理")}</button>:null}</nav>
+ <div className="user-settings-body"><nav aria-label={t("个人设置分类")}>{visibleTabs.map(([id,label,Icon])=><button key={id} aria-current={id===tab?'page':undefined} onClick={()=>{setTab(id);setError('');setNote('');}}><Icon size={18}/>{t(label)}</button>)}{canOpenSystemManagement(user)&&onAdmin?<button type="button" onClick={()=>onAdmin(user.role==='admin'?'overview':'quota')}><Settings size={18}/>{t("系统管理")}</button>:null}</nav>
  <div className="user-settings-content">{error&&<p className="form-error" role="alert">{t(error)}</p>}{prefs.error&&<p className="form-error" role="alert">{t(prefs.error)}</p>}{note&&<p className="form-note" role="status">{t(note)}</p>}
  {tab==='general'&&<><label className="preference-row"><span>{t('界面语言')}</span><select aria-label={t('界面语言')} value={p.ui_language||'zh-CN'} disabled={disabled} onChange={e=>prefs.update({ui_language:e.target.value})}><option value="zh-CN">中文</option><option value="en">English</option></select></label><p className="settings-note-text">{t('问答与工作台共用此语言设置；PPT内容语言单独选择。')}</p>{context!=='work'&&<><h3>{t("主题")}</h3><div className="theme-choices">{[['light',t("浅色"),Sun],['dark',t("深色"),Moon],['system',t("跟随系统"),Monitor]].map(([value,label,Icon])=><button key={value} type="button" aria-pressed={p.theme===value} disabled={disabled} onClick={()=>prefs.update({theme:value})}><Icon size={22}/><span>{t(label)}</span>{p.theme===value&&<Check className="theme-check" size={14}/>}</button>)}</div>
  <label className="preference-row"><span><Type size={18}/>{t("问答字号")}</span><select aria-label={t("问答字号")} value={p.font_size} disabled={disabled} onChange={e=>prefs.update({font_size:e.target.value})}><option value="standard">{t("标准 · 18px")}</option><option value="large">{t("较大 · 20px")}</option><option value="larger">{t("大号 · 22px")}</option></select></label>
@@ -52,6 +54,7 @@ export default function UserSettings({user,initialTab='general',prefs,onUser,onC
  <p className="settings-note-text">{p.send_key==='enter'?t("Shift + Enter 换行。"):t("Enter 换行，Ctrl + Enter 或 ⌘ + Enter 发送。")}</p>
  <div className="settings-save-line"><span role="status">{prefs.saving?t("正在保存…"):prefs.ready?t("偏好自动保存至当前账号"):t("正在加载偏好…")}</span><button className="text-button" disabled={disabled} onClick={()=>prefs.update(defaultPreferences)}>{t("恢复默认")}</button></div></>}</>}
  {tab==='work'&&<><WorkAccountSettings key={user.id} user={user} onAdmin={onAdmin} context={context} refreshKey={quotaRefresh}/><RedeemCode key={user.id} onRedeemed={()=>{if(dialog.current&&currentUser.current===user.id)setQuotaRefresh(value=>value+1);}}/></>}
+ {tab==='habits'&&shownTabs.includes('habits')&&<DesignHabits key={user.id}/>}
  {tab==='linked'&&<LinkWorkAccount user={user} onLinked={()=>api('/me').then(onUser).catch(e=>setError(e.message))}/>}
  {tab==='account'&&<><div className="settings-profile"><span className="profile-initial">{user.name.slice(0,1)}</span><div><strong>{user.name}</strong><p>{user.email||user.legacy_alias}</p></div><span className="role-badge">{user.role==='admin'?t("系统管理员"):user.work_admin?t("工作管理员"):t("用户")}</span></div>
  <form onSubmit={saveProfile} className="profile-form"><label>{t("姓名")}<input aria-label={t("账号姓名")} required maxLength={60} value={profile.name} onChange={e=>setProfile({...profile,name:e.target.value})}/></label><label>{t("所在机构")}<input aria-label={t("账号所在机构")} required maxLength={160} value={profile.organization} onChange={e=>setProfile({...profile,organization:e.target.value})}/></label><label>{t("身份")}<select aria-label={t("账号身份")} value={profile.identity} onChange={e=>setProfile({...profile,identity:e.target.value})}>{(identities.length?identities:[user.identity]).map(i=><option key={i} value={i}>{t(i)}</option>)}</select></label><button className="secondary" disabled={saving}><Save size={16}/>{saving?t("正在保存…"):t("保存资料")}</button></form>

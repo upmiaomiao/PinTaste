@@ -10,6 +10,7 @@ import json
 import threading
 import time
 from sqlalchemy import update
+from sqlalchemy.exc import SQLAlchemyError
 from models import db, Project, Task
 from models.wuyu_workflow import WuyuWorkflow, WuyuWorkflowJob
 from services.wuyu_state import WorkflowError
@@ -155,6 +156,18 @@ class JobExecution:
         if memory and '__design_context' not in payload:
             owner_id = db.session.get(Project, project_id).user_id
             payload['__design_context'] = memory.retrieve(owner_id, self.ports.hook__json(body['brief']))
+            habits = self.ports.app().extensions.get('wuyu_design_habits')
+            if habits:
+                try:
+                    # Same transaction as the job; a log that cannot be written must not block job creation.
+                    used = [rule.get('id') for rule in payload['__design_context'].get('rules', []) if isinstance(rule, dict) and isinstance(rule.get('id'), str)]
+                    habits.log_injection(owner_id, project_id,
+                        [value[len('habit:'):] for value in used if value.startswith('habit:')],
+                        [value for value in used if not value.startswith('habit:')])
+                except SQLAlchemyError:
+                    raise  # The transaction is no longer usable; let the caller's handling see the real error.
+                except Exception as exc:
+                    self.ports.app().logger.warning('Wuyu design injection log skipped: project=%s type=%s', project_id, type(exc).__name__)
         task = Task(project_id=project_id, task_type='WUYU_WORKFLOW', status='PENDING')
         task.set_progress({'total': body['brief']['page_count'], 'completed': 0, 'failed': 0})
         db.session.add(task)

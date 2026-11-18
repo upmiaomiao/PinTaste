@@ -55,3 +55,58 @@ def retrieve():
     if not isinstance(payload, dict) or set(payload) != {'query'} or not isinstance(payload['query'], str) or len(payload['query']) > 4000:
         return error_response('INVALID_REQUEST', '请提供设计查询。', 400)
     return handle(lambda service: {'version':1,'rules':service.retrieve(request.current_user.id, payload['query'], include_system=False)['rules']})
+
+
+def habits(action):
+    return handle(lambda _: action(current_app.extensions['wuyu_design_habits']))
+
+
+@wuyu_design_memory_bp.get('/habits')
+@feature_required('work')
+def list_habits():
+    return habits(lambda service: service.list(request.current_user.id))
+
+
+@wuyu_design_memory_bp.post('/habits')
+@feature_required('work')
+def create_habit():
+    return habits(lambda service: service.create(request.current_user.id, request.get_json(silent=True)))
+
+
+@wuyu_design_memory_bp.patch('/habits/<habit_id>')
+@feature_required('work')
+def update_habit(habit_id):
+    return habits(lambda service: service.update(request.current_user.id, habit_id, request.get_json(silent=True)))
+
+
+@wuyu_design_memory_bp.delete('/habits/<habit_id>')
+@feature_required('work')
+def delete_habit(habit_id):
+    return habits(lambda service: service.delete(request.current_user.id, habit_id))
+
+
+@wuyu_design_memory_bp.put('/habits/settings')
+@feature_required('work')
+def habit_settings():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or set(payload) != {'paused'} or type(payload['paused']) is not bool:
+        return error_response('INVALID_REQUEST', '请指定是否暂停使用设计习惯。', 400)
+    return habits(lambda service: service.set_paused(request.current_user.id, payload['paused']))
+
+
+@wuyu_design_memory_bp.post('/habits/reset')
+@feature_required('work')
+def reset_habits():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or set(payload) != {'confirm'} or payload['confirm'] is not True:
+        return error_response('INVALID_REQUEST', '请确认清空全部设计习惯。', 400)
+    return habits(lambda service: service.reset(request.current_user.id))
+
+
+@wuyu_design_memory_bp.get('/habits/export')
+@wuyu_design_memory_bp.get('/habits/export/<cursor>')
+@feature_required('work')
+def export_habits(cursor=None):
+    # Paged: an answer that carries "next" continues at /habits/export/<next>. The position travels in the
+    # path because the platform bridge forwards no query strings.
+    return habits(lambda service: service.export(request.current_user.id, cursor))
