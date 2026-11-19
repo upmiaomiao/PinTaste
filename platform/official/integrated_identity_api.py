@@ -116,6 +116,19 @@ class DesignHabitInput(Input):
     pinned: StrictBool | None = None
 
 
+class DesignHabitOnboardingItem(Input):
+    category: Literal['integration', 'layout', 'expression']
+    slot: str = Field(pattern=r'^[a-z][a-z0-9_]{0,59}$')
+    rule: str = Field(min_length=1, max_length=300)
+    scope: HabitScope | None = None
+    value: dict | None = None
+
+
+class DesignHabitOnboardingInput(Input):
+    # As many picks as the work service applies to one generation.
+    items: list[DesignHabitOnboardingItem] = Field(min_length=1, max_length=12)
+
+
 class DesignHabitPatchInput(Input):
     version: int = Field(ge=1, strict=True)
     rule: str | None = Field(default=None, min_length=1, max_length=300)
@@ -514,8 +527,9 @@ def design_habits_request(request, user, method, path='', payload=None):
     """Personal design habits: the caller's own work principal, never an administrator token."""
     def action():
         identity.require_feature(user, 'work')
-        if payload is not None:
-            scope, value = payload.get('scope') or {}, payload.get('value')
+        # A first-run submission carries several habits; each is checked like a single one.
+        for habit in [] if payload is None else payload.get('items', [payload]):
+            scope, value = habit.get('scope') or {}, habit.get('value')
             if any(not 1 <= len(item.strip()) <= 60 for item in scope.values()):
                 raise identity.IdentityError('INVALID_HABIT_SCOPE', 400)
             # Escaped length, as the work service measures it.
@@ -540,6 +554,13 @@ def design_habits(request: Request, user=Depends(auth.current)):
 @router.post('/api/work/design-habits')
 def design_habit_create(body: DesignHabitInput, request: Request, user=Depends(auth.current)):
     return design_habits_request(request, user, 'POST', '', body.model_dump(exclude_none=True))
+
+
+@router.post('/api/work/design-habits/onboarding')
+def design_habits_onboarding(body: DesignHabitOnboardingInput, request: Request, user=Depends(auth.current)):
+    """Habits picked during first-run setup. The work service never lets them replace what the caller set or
+    changed later; such picks come back under "skipped". Submitting again what the caller removed stores it again."""
+    return design_habits_request(request, user, 'POST', '/onboarding', body.model_dump(exclude_none=True))
 
 
 @router.get('/api/work/design-habits/export')

@@ -4,13 +4,14 @@ Phase 1 stores what the user states explicitly, an immutable event log and an
 injection log. Nothing here calls a model; inference from events is a later
 phase. Every owner-facing lookup is filtered by owner_id.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
+import hashlib
 import json
 import re
 
 from flask import current_app, has_app_context
-from sqlalchemy import and_, delete, event, inspect, or_, update
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import and_, delete, event, inspect, or_, text, update
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from models import db, Project, User
 from models.wuyu_design_habits import (DesignEvent, DesignHabit, DesignHabitRevision,
                                        DesignInjectionLog, DesignHabitPreference)
@@ -66,6 +67,10 @@ SLOTS = {category: {slot for slot, _, _ in items} for category, items in CATALOG
 # These slots hold several independent rules at once; a new habit there never replaces an older one.
 MULTI_VALUED_SLOTS = {'other', 'required_pages', 'banned_chart_types'}
 ORIGIN_ORDER = {'explicit': 0, 'onboarding': 1, 'inferred': 2}
+# One first-run submission never holds more picks than one generation can apply.
+MAX_ONBOARDING_ITEMS = MAX_ACTIVE_INJECTED
+# Transaction-scoped PostgreSQL advisory locks of this module: (namespace, key derived from the owner).
+PG_OWNER_LOCK_NAMESPACE, PG_OWNER_LOCK_TIMEOUT_MS = 0x57484142, 10000
 
 
 def _load(text, fallback):
@@ -144,6 +149,16 @@ class DesignHabits:
             raise DesignMemoryError('开关取值无效。')
         return value
 
+    def _fields(self, payload, extra=()):
+        """What a new habit must state, validated the same way wherever one is created."""
+        if not isinstance(payload, dict) or not {'category', 'slot', 'rule'} <= set(payload) \
+                or not set(payload) <= {'category', 'slot', 'rule', 'scope', 'value', *extra}:
+            raise DesignMemoryError('请提供习惯的类别、项目和描述。')
+        category, slot = payload['category'], payload['slot']
+        if not isinstance(category, str) or category not in SLOTS or not isinstance(slot, str) or slot not in SLOTS[category]:
+            raise DesignMemoryError('习惯的类别或项目无效。')
+        return category, slot, self._rule(payload['rule']), self._scope(payload.get('scope')), self._value(payload.get('value'))
+
     def _owned(self, owner_id, habit_id):
         row = None
         if isinstance(habit_id, str) and len(habit_id) <= 36:
@@ -157,14 +172,38 @@ class DesignHabits:
             before=dumps(before) if before is not None else None, after=dumps(after) if after is not None else None,
             reason=reason))
 
-    def _supersede(self, row, now):
+    def _serialize(self, owner_id):
+        """One habit writer per owner at a time, from here until the caller commits or rolls back.
+
+        Whether a slot is free is read first and acted on afterwards; without this another writer of the
+        same owner could commit in between. Call it before those reads, inside the caller's try block.
+        """
+        try:
+            connection = db.session.connection()
+            if connection.dialect.name == 'sqlite':
+                # A transaction that has already written holds the write lock.
+                if not connection.connection.driver_connection.in_transaction:
+                    connection.exec_driver_sql('BEGIN IMMEDIATE')
+            elif connection.dialect.name == 'postgresql':
+                key = int.from_bytes(hashlib.sha256(str(owner_id).encode()).digest()[:4], 'big', signed=True)
+                connection.execute(text("SELECT set_config('lock_timeout', :timeout, true)"),
+                                   {'timeout': str(PG_OWNER_LOCK_TIMEOUT_MS) + 'ms'})
+                connection.execute(text('SELECT pg_advisory_xact_lock(:namespace, :key)'),
+                                   {'namespace': PG_OWNER_LOCK_NAMESPACE, 'key': key})
+        except SQLAlchemyError:
+            raise DesignMemoryError('设计记忆存储暂不可用，请稍后重试。', 'DESIGN_MEMORY_STORAGE_UNAVAILABLE', 503) from None
+
+    def _supersede(self, row, now, seeded=False):
         """At most one active habit per owner + category + slot + scope, except in multi-valued slots."""
         if row.slot in MULTI_VALUED_SLOTS:
             return
         others = DesignHabit.query.filter(DesignHabit.owner_id == row.owner_id, DesignHabit.layer == 'personal',
             DesignHabit.category == row.category, DesignHabit.slot == row.slot, DesignHabit.scope == row.scope,
-            DesignHabit.status == 'active', DesignHabit.id != row.id).all()
-        for old in others:
+            DesignHabit.status == 'active', DesignHabit.id != row.id)
+        if seeded:
+            # A first-run pick shelves nothing but an earlier pick that is still exactly as it was stored.
+            others = others.filter(DesignHabit.origin == 'onboarding', DesignHabit.version == 1)
+        for old in others.all():
             before = self._public(old)
             old.valid_to, old.status, old.superseded_by = now, 'dormant', row.id
             old.updated_at, old.version = now, old.version + 1
@@ -220,22 +259,17 @@ class DesignHabits:
 
     def create(self, owner_id, payload):
         self._require()
-        if not isinstance(payload, dict) or not {'category', 'slot', 'rule'} <= set(payload) \
-                or not set(payload) <= {'category', 'slot', 'rule', 'scope', 'value', 'pinned'}:
-            raise DesignMemoryError('请提供习惯的类别、项目和描述。')
-        category, slot = payload['category'], payload['slot']
-        if not isinstance(category, str) or category not in SLOTS or not isinstance(slot, str) or slot not in SLOTS[category]:
-            raise DesignMemoryError('习惯的类别或项目无效。')
-        rule, scope, value = self._rule(payload['rule']), self._scope(payload.get('scope')), self._value(payload.get('value'))
+        category, slot, rule, scope, value = self._fields(payload, {'pinned'})
         pinned = self._flag(payload['pinned']) if 'pinned' in payload else False
-        if self._live_limit(owner_id).count() >= MAX_STORED_HABITS:
-            raise DesignMemoryError('设计习惯数量已达上限，请先删除不再需要的习惯。', 'HABIT_LIMIT', 409)
-        now = datetime.utcnow()
-        row = DesignHabit(layer='personal', owner_id=owner_id, category=category, slot=slot, scope=dumps(scope),
-            value=dumps(value), rule=rule, origin='explicit', evidence='[]', project_count=0, helpful=0, harmful=0,
-            status='active', pinned=pinned, paused=False, valid_from=now, last_confirmed_at=now,
-            created_at=now, updated_at=now, version=1)
         try:
+            self._serialize(owner_id)
+            if self._live_limit(owner_id).count() >= MAX_STORED_HABITS:
+                raise DesignMemoryError('设计习惯数量已达上限，请先删除不再需要的习惯。', 'HABIT_LIMIT', 409)
+            now = datetime.utcnow()
+            row = DesignHabit(layer='personal', owner_id=owner_id, category=category, slot=slot, scope=dumps(scope),
+                value=dumps(value), rule=rule, origin='explicit', evidence='[]', project_count=0, helpful=0, harmful=0,
+                status='active', pinned=pinned, paused=False, valid_from=now, last_confirmed_at=now,
+                created_at=now, updated_at=now, version=1)
             db.session.add(row)
             db.session.flush()
             self._supersede(row, now)
@@ -245,6 +279,82 @@ class DesignHabits:
             db.session.rollback()
             raise
         return self._public(row)
+
+    @staticmethod
+    def _seed_obstacle(active, slot, rule, value):
+        """Why a first-run pick is not stored next to the slot's active habits; None when it may be."""
+        def holder(rows):
+            origins = {row.origin for row in rows}
+            return 'explicit' if 'explicit' in origins else 'inferred' if 'inferred' in origins else 'existing'
+        same = [row for row in active if row.rule == rule and row.value == value]
+        if slot in MULTI_VALUED_SLOTS:
+            # Rules stand side by side here and nothing is replaced, so only the very same rule is in the way.
+            return None if not same else 'unchanged' if any(row.origin == 'onboarding' for row in same) else holder(same)
+        foreign = [row for row in active if row.origin != 'onboarding']
+        if foreign:
+            return holder(foreign)
+        if same:
+            return 'unchanged'
+        # Version 1 is a pick exactly as it was stored. Every later edit, pin, pause or reactivation
+        # raises the version: from then on the habit is the owner's wording and decision.
+        return 'edited' if any(row.version > 1 for row in active) else None
+
+    def seed_onboarding(self, owner_id, items):
+        """Store what the owner picked during first-run setup, as habits of origin 'onboarding'.
+
+        All or nothing: one invalid item or a reached limit stores none of them. Submitting the same picks
+        again creates nothing while the earlier ones are in use. A pick never replaces what the owner set,
+        what was learned, or an earlier pick the owner has since edited, pinned, paused or brought back:
+        such an item is reported under 'skipped' with the reason 'explicit', 'inferred' ('existing' for any
+        other origin), 'edited' or 'unchanged'. An earlier, different and untouched pick for the same
+        single-valued slot is shelved.
+        In a multi-valued slot only the very same rule is skipped. Earlier picks of one submission rank first.
+        Like create(), this does not depend on the owner's global pause: paused habits are stored, not applied.
+        The service keeps no record of a finished setup: a pick the owner has revoked or deleted is stored
+        again when it is submitted again, so showing the setup once is the caller's part.
+        """
+        self._require()
+        if not isinstance(items, list) or not 1 <= len(items) <= MAX_ONBOARDING_ITEMS:
+            raise DesignMemoryError('请提供 1 到 %d 条初始习惯。' % MAX_ONBOARDING_ITEMS)
+        picks, taken = [], {}
+        for item in items:
+            category, slot, rule, scope, value = self._fields(item)
+            pick = (category, slot, dumps(scope), rule, dumps(value))
+            if pick in picks:
+                continue
+            # Two different picks for one single-valued slot contradict each other; neither is guessed.
+            if slot not in MULTI_VALUED_SLOTS and taken.setdefault(pick[:3], pick) != pick:
+                raise DesignMemoryError('同一项目在同一适用范围内只能选择一条初始习惯。')
+            picks.append(pick)
+        created, skipped = [], []
+        try:
+            self._serialize(owner_id)
+            now = datetime.utcnow()
+            for category, slot, scope, rule, value in picks:
+                active = DesignHabit.query.filter_by(owner_id=owner_id, layer='personal', category=category,
+                    slot=slot, scope=scope, status='active').all()
+                reason = self._seed_obstacle(active, slot, rule, value)
+                if reason:
+                    skipped.append({'category': category, 'slot': slot, 'reason': reason})
+                    continue
+                if self._live_limit(owner_id).count() >= MAX_STORED_HABITS:
+                    raise DesignMemoryError('设计习惯数量已达上限，请先删除不再需要的习惯。', 'HABIT_LIMIT', 409)
+                # Habits are listed and applied newest first: one microsecond apart, the picks keep the
+                # order they were submitted in instead of the order of their random ids.
+                row = DesignHabit(layer='personal', owner_id=owner_id, category=category, slot=slot, scope=scope,
+                    value=value, rule=rule, origin='onboarding', evidence='[]', project_count=0, helpful=0, harmful=0,
+                    status='active', pinned=False, paused=False, valid_from=now, last_confirmed_at=now,
+                    created_at=now - timedelta(microseconds=len(created)), updated_at=now, version=1)
+                db.session.add(row)
+                db.session.flush()
+                self._supersede(row, now, seeded=True)
+                self._revise(row, 'onboarding', None, self._public(row))
+                created.append(row)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+        return {'created': [self._public(row) for row in created], 'skipped': skipped}
 
     def update(self, owner_id, habit_id, payload):
         self._require()
@@ -287,6 +397,7 @@ class DesignHabits:
             else:
                 raise DesignMemoryError('状态只能改为使用中或撤销。')
         try:
+            self._serialize(owner_id)
             # Compare-and-set on version: a concurrent writer makes this a conflict, not a lost update.
             result = db.session.execute(update(DesignHabit).where(DesignHabit.id == row.id,
                 DesignHabit.owner_id == owner_id, DesignHabit.version == payload['version']).values(**values))

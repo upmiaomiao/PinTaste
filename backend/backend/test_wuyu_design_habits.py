@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import json
 from pathlib import Path
 import tempfile
+import threading
 import types
 import unittest
 import uuid
@@ -436,6 +437,7 @@ class StoreTests(HabitFixture):
         try:
             for call in [lambda: self.habits.list('owner-a'), lambda: self.make(), lambda: self.habits.export('owner-a'),
                          lambda: self.habits.reset('owner-a'), lambda: self.habits.set_paused('owner-a', True),
+                         lambda: self.habits.seed_onboarding('owner-a', [{'category': 'layout', 'slot': 'palette', 'rule': 'x'}]),
                          lambda: self.habits.update('owner-a', 'x', {'rule': 'x', 'version': 1}),
                          lambda: self.habits.delete('owner-a', 'x')]:
                 self.assertCode('HABITS_UNAVAILABLE', 503, call)
@@ -447,6 +449,371 @@ class StoreTests(HabitFixture):
         finally:
             self.habits.available = True
         self.assertEqual(self.models.DesignEvent.query.count(), 0)
+
+
+class OnboardingTests(HabitFixture):
+    PICKS = [{'category': 'layout', 'slot': 'palette', 'rule': '主色用深蓝'},
+             {'category': 'integration', 'slot': 'title_style', 'rule': '标题写成结论句', 'scope': {'purpose': 'research'},
+              'value': {'form': 'conclusion'}},
+             {'category': 'expression', 'slot': 'banned_chart_types', 'rule': '不使用三维图表'}]
+
+    def rows(self, owner='owner-a', **where):
+        return self.models.DesignHabit.query.filter_by(owner_id=owner, **where).all()
+
+    def test_seed_creates_active_onboarding_habits(self):
+        result = self.habits.seed_onboarding('owner-a', self.PICKS)
+        self.assertEqual((set(result), result['skipped']), ({'created', 'skipped'}, []))
+        self.assertEqual([(x['category'], x['slot'], x['rule'], x['scope'], x['value'], x['origin'], x['status'], x['pinned'], x['version'])
+                          for x in result['created']],
+                         [('layout', 'palette', '主色用深蓝', {}, {}, 'onboarding', 'active', False, 1),
+                          ('integration', 'title_style', '标题写成结论句', {'purpose': 'research'}, {'form': 'conclusion'}, 'onboarding', 'active', False, 1),
+                          ('expression', 'banned_chart_types', '不使用三维图表', {}, {}, 'onboarding', 'active', False, 1)])
+        self.assertEqual(set(result['created'][0]), set(self.make(owner='owner-b')))
+        self.assertEqual(sorted(x['id'] for x in self.habits.list('owner-a')['items']), sorted(x['id'] for x in result['created']))
+        revisions = self.models.DesignHabitRevision.query.filter_by(owner_id='owner-a').all()
+        self.assertEqual(sorted((row.habit_id, row.actor, row.action, row.before) for row in revisions),
+                         sorted((x['id'], 'user', 'onboarding', None) for x in result['created']))
+        self.assertEqual(json.loads(revisions[0].after)['origin'], 'onboarding')
+        # The normal create route never takes an origin from the client.
+        self.assertCode('DESIGN_MEMORY_INVALID', 400, self.habits.create, 'owner-a',
+                        {'category': 'layout', 'slot': 'fonts', 'rule': 'x', 'origin': 'onboarding'})
+        self.assertEqual(self.make(category='layout', slot='fonts')['origin'], 'explicit')
+
+    def test_seed_is_idempotent(self):
+        first = self.habits.seed_onboarding('owner-a', self.PICKS)
+        again = self.habits.seed_onboarding('owner-a', self.PICKS)
+        self.assertEqual(again['created'], [])
+        self.assertEqual(again['skipped'], [{'category': pick['category'], 'slot': pick['slot'], 'reason': 'unchanged'} for pick in self.PICKS])
+        self.assertEqual(sorted(row.id for row in self.rows()), sorted(x['id'] for x in first['created']))
+        self.assertEqual({(row.status, row.version) for row in self.rows()}, {('active', 1)})
+        self.assertEqual(self.models.DesignHabitRevision.query.count(), 3)
+        # A repeated pick inside one submission counts once; surrounding spaces do not make a new habit.
+        twice = self.habits.seed_onboarding('owner-b', [self.PICKS[0], dict(self.PICKS[0], rule=' 主色用深蓝 '), self.PICKS[2], self.PICKS[2]])
+        self.assertEqual(([x['slot'] for x in twice['created']], twice['skipped']), (['palette', 'banned_chart_types'], []))
+        # A multi-valued slot takes a further pick next to the earlier one.
+        more = self.habits.seed_onboarding('owner-b', [{'category': 'expression', 'slot': 'banned_chart_types', 'rule': '不使用饼图'}])
+        self.assertEqual(len(more['created']), 1)
+        self.assertEqual(sorted(row.status for row in self.rows('owner-b', slot='banned_chart_types')), ['active', 'active'])
+
+    def test_seed_never_replaces_what_the_owner_set_or_what_was_learned(self):
+        mine = self.make(category='layout', slot='palette', rule='主色用墨绿')
+        learned = self.models.DesignHabit(layer='personal', owner_id='owner-a', category='integration', slot='title_style',
+            scope=dumps({'purpose': 'research'}), rule='标题用短语', origin='inferred', status='active', valid_from=datetime.utcnow())
+        # A suggestion that is not confirmed yet and a shelved habit do not hold the slot.
+        pending = self.models.DesignHabit(layer='personal', owner_id='owner-a', category='layout', slot='fonts',
+            scope='{}', rule='中文用宋体', origin='inferred', status='candidate', valid_from=datetime.utcnow())
+        db.session.add_all([learned, pending]); db.session.commit()
+        result = self.habits.seed_onboarding('owner-a', self.PICKS + [
+            {'category': 'layout', 'slot': 'fonts', 'rule': '中文用微软雅黑'},
+            {'category': 'layout', 'slot': 'palette', 'rule': '商业汇报主色用红', 'scope': {'purpose': 'commercial'}}])
+        self.assertEqual(result['skipped'], [{'category': 'layout', 'slot': 'palette', 'reason': 'explicit'},
+                                             {'category': 'integration', 'slot': 'title_style', 'reason': 'inferred'}])
+        self.assertEqual([(x['slot'], x['scope']) for x in result['created']],
+                         [('banned_chart_types', {}), ('fonts', {}), ('palette', {'purpose': 'commercial'})])
+        rows = {row.id: row for row in self.rows()}
+        self.assertEqual([(rows[key].status, rows[key].rule, rows[key].version, rows[key].superseded_by) for key in (mine['id'], learned.id, pending.id)],
+                         [('active', '主色用墨绿', 1, None), ('active', '标题用短语', 1, None), ('candidate', '中文用宋体', 1, None)])
+        self.assertEqual(self.models.DesignHabitRevision.query.filter_by(action='supersede').count(), 0)
+        # An explicit habit added later replaces the onboarding pick, as it replaces any other habit.
+        later = self.make(category='layout', slot='fonts', rule='中文用黑体')
+        fonts = {row.origin: (row.status, row.superseded_by) for row in self.rows(slot='fonts') if row.status != 'candidate'}
+        self.assertEqual(fonts, {'explicit': ('active', None), 'onboarding': ('dormant', later['id'])})
+
+    def test_seed_supersedes_an_earlier_different_pick(self):
+        first = self.habits.seed_onboarding('owner-a', self.PICKS)['created']
+        changed = [dict(self.PICKS[0], rule='主色用墨绿'), self.PICKS[1], dict(self.PICKS[2], rule='不使用饼图')]
+        result = self.habits.seed_onboarding('owner-a', changed)
+        self.assertEqual([x['rule'] for x in result['created']], ['主色用墨绿', '不使用饼图'])
+        self.assertEqual(result['skipped'], [{'category': 'integration', 'slot': 'title_style', 'reason': 'unchanged'}])
+        rows = {row.id: row for row in self.rows()}
+        old = rows[first[0]['id']]
+        self.assertEqual((old.status, old.superseded_by, old.version), ('dormant', result['created'][0]['id'], 2))
+        self.assertIsNotNone(old.valid_to)
+        # Multi-valued slots are exempt: both picks stay in use.
+        self.assertEqual((rows[first[2]['id']].status, rows[first[2]['id']].superseded_by), ('active', None))
+        revisions = self.models.DesignHabitRevision.query.filter_by(action='supersede').all()
+        self.assertEqual([(row.habit_id, row.actor, row.reason) for row in revisions],
+                         [(old.id, 'system', 'superseded_by:' + result['created'][0]['id'])])
+        self.assertEqual(sorted(x['rule'] for x in self.habits.active_for('owner-a', {'purpose': 'research'})),
+                         sorted(['主色用墨绿', '标题写成结论句', '不使用三维图表', '不使用饼图']))
+        # The same rule with another value is a different pick too.
+        valued = self.habits.seed_onboarding('owner-a', [dict(self.PICKS[1], value={'form': 'question'})])
+        self.assertEqual(db.session.get(self.models.DesignHabit, first[1]['id']).superseded_by, valued['created'][0]['id'])
+
+    def test_seed_keeps_a_pick_the_owner_has_changed(self):
+        first = {x['slot']: x for x in self.habits.seed_onboarding('owner-a', self.PICKS + [
+            {'category': 'layout', 'slot': 'fonts', 'rule': '中文用微软雅黑'},
+            {'category': 'layout', 'slot': 'alignment', 'rule': '正文左对齐'},
+            {'category': 'layout', 'slot': 'whitespace', 'rule': '四周多留白'}])['created']}
+        # The owner rewords and pins one pick, only pins a second, only pauses a third; none changes its origin.
+        mine = self.habits.update('owner-a', first['palette']['id'], {'rule': '主色用墨绿（我改的）', 'pinned': True, 'version': 1})
+        self.habits.update('owner-a', first['fonts']['id'], {'pinned': True, 'version': 1})
+        self.habits.update('owner-a', first['alignment']['id'], {'paused': True, 'version': 1})
+        self.assertEqual((mine['origin'], mine['version']), ('onboarding', 2))
+        again = self.habits.seed_onboarding('owner-a', [self.PICKS[0], {'category': 'layout', 'slot': 'fonts', 'rule': '中文用微软雅黑'},
+            {'category': 'layout', 'slot': 'alignment', 'rule': '正文居中'}, {'category': 'layout', 'slot': 'whitespace', 'rule': '页面紧凑'}])
+        self.assertEqual(again['skipped'], [{'category': 'layout', 'slot': 'palette', 'reason': 'edited'},
+                                            {'category': 'layout', 'slot': 'fonts', 'reason': 'unchanged'},
+                                            {'category': 'layout', 'slot': 'alignment', 'reason': 'edited'}])
+        # Only the pick nobody touched is replaced.
+        self.assertEqual([x['rule'] for x in again['created']], ['页面紧凑'])
+        rows = {row.id: row for row in self.rows()}
+        self.assertEqual([(rows[first[slot]['id']].status, rows[first[slot]['id']].rule, rows[first[slot]['id']].pinned,
+                           rows[first[slot]['id']].paused, rows[first[slot]['id']].superseded_by) for slot in ('palette', 'fonts', 'alignment')],
+                         [('active', '主色用墨绿（我改的）', True, False, None), ('active', '中文用微软雅黑', True, False, None),
+                          ('active', '正文左对齐', False, True, None)])
+        self.assertEqual((rows[first['whitespace']['id']].status, rows[first['whitespace']['id']].superseded_by),
+                         ('dormant', again['created'][0]['id']))
+        self.assertEqual([row.habit_id for row in self.models.DesignHabitRevision.query.filter_by(action='supersede').all()],
+                         [first['whitespace']['id']])
+        # A shelved pick the owner brings back is the owner's decision too: the newer pick does not return.
+        self.habits.update('owner-a', first['whitespace']['id'], {'status': 'active', 'version': 2})
+        back = self.habits.seed_onboarding('owner-a', [{'category': 'layout', 'slot': 'whitespace', 'rule': '页面紧凑'}])
+        self.assertEqual((back['created'], back['skipped']), ([], [{'category': 'layout', 'slot': 'whitespace', 'reason': 'edited'}]))
+        self.assertEqual(db.session.get(self.models.DesignHabit, first['whitespace']['id']).status, 'active')
+        # Even if the check were passed, the shelving step itself leaves a changed pick alone.
+        with patch.object(self.habits, '_seed_obstacle', return_value=None):
+            forced = self.habits.seed_onboarding('owner-a', [self.PICKS[0]])['created'][0]
+        self.assertEqual((db.session.get(self.models.DesignHabit, first['palette']['id']).status, forced['status']), ('active', 'active'))
+
+    def test_seed_stores_again_what_the_owner_removed(self):
+        # No record of a finished setup is kept: a removed pick comes back only when the caller submits it again.
+        first = self.habits.seed_onboarding('owner-a', self.PICKS[:2])['created']
+        self.habits.update('owner-a', first[0]['id'], {'status': 'revoked', 'version': 1})
+        self.habits.delete('owner-a', first[1]['id'])
+        again = self.habits.seed_onboarding('owner-a', self.PICKS[:2])
+        self.assertEqual(([x['rule'] for x in again['created']], again['skipped']), (['主色用深蓝', '标题写成结论句'], []))
+        self.assertEqual(db.session.get(self.models.DesignHabit, first[0]['id']).status, 'revoked')
+
+    def test_seed_in_a_multi_valued_slot_skips_only_the_same_rule(self):
+        self.make(category='layout', slot='other', rule='页脚放单位 logo')
+        self.make(category='expression', slot='banned_chart_types', rule='不使用三维图表')
+        db.session.add(self.models.DesignHabit(layer='personal', owner_id='owner-a', category='integration', slot='required_pages',
+            scope='{}', rule='结尾有致谢页', origin='inferred', status='active', valid_from=datetime.utcnow()))
+        db.session.commit()
+        result = self.habits.seed_onboarding('owner-a', [
+            {'category': 'layout', 'slot': 'other', 'rule': '标题一律加粗'}, self.PICKS[2],
+            {'category': 'integration', 'slot': 'required_pages', 'rule': '结尾有致谢页'},
+            {'category': 'integration', 'slot': 'required_pages', 'rule': '开头有目录页'},
+            {'category': 'expression', 'slot': 'banned_chart_types', 'rule': '不使用三维图表', 'value': {'kind': '3d'}}])
+        # Nothing is replaced in these slots, so an unrelated rule of the owner blocks nothing.
+        self.assertEqual([(x['slot'], x['rule']) for x in result['created']],
+                         [('other', '标题一律加粗'), ('required_pages', '开头有目录页'), ('banned_chart_types', '不使用三维图表')])
+        self.assertEqual(result['skipped'], [{'category': 'expression', 'slot': 'banned_chart_types', 'reason': 'explicit'},
+                                             {'category': 'integration', 'slot': 'required_pages', 'reason': 'inferred'}])
+        self.assertEqual({row.status for row in self.rows()}, {'active'})
+        self.assertEqual(sorted(row.rule for row in self.rows(slot='other')), ['标题一律加粗', '页脚放单位 logo'])
+        # The outcome no longer depends on which came first.
+        self.habits.seed_onboarding('owner-b', [{'category': 'layout', 'slot': 'other', 'rule': '标题一律加粗'}])
+        self.make(owner='owner-b', category='layout', slot='other', rule='页脚放单位 logo')
+        self.assertEqual(sorted(row.rule for row in self.rows('owner-b', status='active')), ['标题一律加粗', '页脚放单位 logo'])
+        # An edited pick stays next to the pick as it was first worded.
+        edited = self.habits.update('owner-a', result['created'][0]['id'], {'rule': '标题加粗并放大', 'version': 1})
+        again = self.habits.seed_onboarding('owner-a', [{'category': 'layout', 'slot': 'other', 'rule': '标题一律加粗'}])
+        self.assertEqual((len(again['created']), db.session.get(self.models.DesignHabit, edited['id']).status), (1, 'active'))
+
+    def test_seed_keeps_the_submitted_order_and_fits_one_generation(self):
+        from services.wuyu_design_habits import MAX_ACTIVE_INJECTED, MAX_ONBOARDING_ITEMS
+        self.assertEqual(MAX_ONBOARDING_ITEMS, MAX_ACTIVE_INJECTED)
+        picks = [{'category': 'layout', 'slot': 'other', 'rule': '初始习惯 %02d' % number} for number in range(1, MAX_ONBOARDING_ITEMS + 1)]
+        for attempt in range(3):  # ids are random: an order that only holds by chance fails within a few rounds
+            owner = 'owner-%d' % attempt
+            created = self.habits.seed_onboarding(owner, picks)['created']
+            wanted = [pick['rule'] for pick in picks]
+            self.assertEqual([x['rule'] for x in created], wanted)
+            self.assertEqual(len({x['created_at'] for x in created}), len(picks))
+            # Everything stored by one submission is applied, and listed, in the order it was picked.
+            self.assertEqual([x['rule'] for x in self.habits.active_for(owner, {})], wanted)
+            self.assertEqual([x['rule'] for x in self.habits.list(owner)['items']], wanted)
+            self.assertEqual([x['rule'] for x in self.habits.export(owner)['habits']], wanted)
+        self.assertCode('DESIGN_MEMORY_INVALID', 400, self.habits.seed_onboarding, 'owner-9', picks + [dict(picks[0], rule='多出的一条')])
+        self.assertEqual(self.rows('owner-9'), [])
+        # A later submission is newer as a whole than an earlier one.
+        self.habits.seed_onboarding('owner-0', [{'category': 'layout', 'slot': 'palette', 'rule': '后来选的'}])
+        self.assertEqual(self.habits.list('owner-0')['items'][0]['rule'], '后来选的')
+
+    def _held(self, method, work):
+        """Run work() in a second session while method of the habit service is paused inside its transaction."""
+        inside, release, result, real = threading.Event(), threading.Event(), {}, getattr(self.habits, method)
+
+        def paused(*args, **kwargs):
+            inside.set(); release.wait(10)
+            return real(*args, **kwargs)
+
+        def first(call):
+            with self.app.app_context():
+                try:
+                    with patch.object(self.habits, method, side_effect=paused):
+                        result['first'] = call()
+                finally:
+                    db.session.remove()
+
+        def second():
+            with self.app.app_context():
+                try:
+                    result['second'] = work()
+                finally:
+                    db.session.remove()
+        return inside, release, result, first, second
+
+    def test_writers_of_one_owner_take_turns(self):
+        # Separate sessions on the file database: the second writer must wait for the first one's commit.
+        pick = [self.PICKS[0]]
+        for name, work, expected in (
+                ('same picks twice', lambda: self.habits.seed_onboarding('owner-a', pick),
+                 lambda first, second: (len(first['created']), second['created'], second['skipped'])
+                 == (1, [], [{'category': 'layout', 'slot': 'palette', 'reason': 'unchanged'}])),
+                ('explicit habit during setup', lambda: self.make(category='layout', slot='palette', rule='我自己设的主色：墨绿'),
+                 lambda first, second: len(first['created']) == 1 and second['status'] == 'active')):
+            with self.subTest(name):
+                self.models.DesignHabit.query.delete(); self.models.DesignHabitRevision.query.delete(); db.session.commit()
+                db.session.remove()
+                # _live_limit runs after the slot was read as free and before the pick is inserted.
+                inside, release, result, first, second = self._held('_live_limit', work)
+                one = threading.Thread(target=first, args=(lambda: self.habits.seed_onboarding('owner-a', pick),))
+                one.start(); self.assertTrue(inside.wait(10))
+                two = threading.Thread(target=second)
+                two.start(); two.join(0.5)
+                waited = two.is_alive()
+                release.set(); one.join(10); two.join(10)
+                self.assertTrue(waited, 'the second writer went ahead inside the first one\'s transaction')
+                self.assertTrue(expected(result['first'], result['second']), result)
+                rows = sorted((row.origin, row.status, row.superseded_by is not None) for row in self.rows())
+                self.assertEqual(rows, [('onboarding', 'active', False)] if name == 'same picks twice'
+                                 else [('explicit', 'active', False), ('onboarding', 'dormant', True)])
+
+    def test_owner_lock_statements(self):
+        from services import wuyu_design_habits as module
+        calls = []
+
+        class Connection:
+            dialect = types.SimpleNamespace(name='postgresql')
+
+            def execute(self, statement, parameters):
+                calls.append((str(statement), parameters))
+                if fail and 'pg_advisory_xact_lock' in str(statement):
+                    raise OperationalError('s', {}, Exception('lock timeout'))
+        for fail in (False, True):
+            with patch.object(db.session, 'connection', return_value=Connection()):
+                if fail:
+                    self.assertCode('DESIGN_MEMORY_STORAGE_UNAVAILABLE', 503, self.habits._serialize, 'owner-a')
+                else:
+                    self.habits._serialize('owner-a'); self.habits._serialize('owner-a'); self.habits._serialize('owner-b')
+        locks = [parameters for statement, parameters in calls if statement == 'SELECT pg_advisory_xact_lock(:namespace, :key)']
+        self.assertEqual(len(calls), 8)
+        self.assertEqual([statement for statement, _ in calls[:2]], ["SELECT set_config('lock_timeout', :timeout, true)",
+                                                                     'SELECT pg_advisory_xact_lock(:namespace, :key)'])
+        self.assertEqual(calls[0][1], {'timeout': '10000ms'})
+        # One key per owner, stable across processes, inside the 32-bit range of the two-key lock function.
+        self.assertEqual({lock['namespace'] for lock in locks}, {module.PG_OWNER_LOCK_NAMESPACE})
+        self.assertEqual((locks[0]['key'], locks[0]['key'] == locks[2]['key']), (locks[1]['key'], False))
+        self.assertTrue(all(-2 ** 31 <= lock['key'] < 2 ** 31 for lock in locks))
+        self.assertNotEqual((module.PG_OWNER_LOCK_NAMESPACE, locks[0]['key']), (0x57555955, 0x44455347))
+        # SQLite: the write lock is taken once, and a transaction that already wrote is left alone.
+        self.habits._serialize('owner-a')
+        self.assertTrue(db.session.connection().connection.driver_connection.in_transaction)
+        self.habits._serialize('owner-a')
+        db.session.rollback()
+        db.session.add(self.models.DesignHabitPreference(owner_id='owner-z', paused=False)); db.session.flush()
+        self.habits._serialize('owner-a')
+        db.session.rollback()
+        # Every writer that decides on a slot takes the lock first.
+        with patch.object(self.habits, '_serialize', side_effect=self.habits._serialize) as lock:
+            item = self.make()
+            self.habits.update('owner-a', item['id'], {'pinned': True, 'version': 1})
+            self.habits.seed_onboarding('owner-a', self.PICKS)
+        self.assertEqual([call.args for call in lock.call_args_list], [('owner-a',)] * 3)
+
+    def test_seed_validation_is_all_or_nothing(self):
+        good = self.PICKS[0]
+        for items in [None, {}, 'x', [], [good] * 13, [dict(good, rule='r%d' % n, scope={'page_role': str(n)}) for n in range(13)], [good, None], [good, {'category': 'layout', 'slot': 'palette'}],
+                      [good, {'category': 'nope', 'slot': 'palette', 'rule': 'x'}],
+                      [good, {'category': 'layout', 'slot': 'share_data_form', 'rule': 'x'}],
+                      [good, {'category': 'layout', 'slot': 'fonts', 'rule': '  '}],
+                      [good, {'category': 'layout', 'slot': 'fonts', 'rule': 'x' * 301}],
+                      [good, {'category': 'layout', 'slot': 'fonts', 'rule': 'x', 'scope': {'purpose': '答辩'}}],
+                      [good, {'category': 'layout', 'slot': 'fonts', 'rule': 'x', 'value': {'k': 'v' * 3000}}],
+                      # What a client must not choose: not pinned, no origin, status or owner.
+                      [good, {'category': 'layout', 'slot': 'fonts', 'rule': 'x', 'pinned': True}],
+                      [good, {'category': 'layout', 'slot': 'fonts', 'rule': 'x', 'origin': 'explicit'}],
+                      [good, {'category': 'layout', 'slot': 'fonts', 'rule': 'x', 'status': 'candidate'}],
+                      [good, {'category': 'layout', 'slot': 'fonts', 'rule': 'x', 'owner_id': 'owner-b'}],
+                      # Two different answers for one single-valued slot and scope.
+                      [good, dict(good, rule='主色用墨绿')]]:
+            self.assertCode('DESIGN_MEMORY_INVALID', 400, self.habits.seed_onboarding, 'owner-a', items)
+        self.assertEqual((self.models.DesignHabit.query.count(), self.models.DesignHabitRevision.query.count()), (0, 0))
+        # The same slot under different scopes is not a contradiction.
+        result = self.habits.seed_onboarding('owner-a', [good, dict(good, rule='学术汇报主色用灰', scope={'purpose': 'research'})])
+        self.assertEqual(len(result['created']), 2)
+        # A failure while storing keeps nothing either, including what was already shelved in the same call.
+        with patch.object(self.habits, '_revise', side_effect=[None, None, RuntimeError('boom')]):
+            with self.assertRaises(RuntimeError):
+                self.habits.seed_onboarding('owner-a', [dict(good, rule='主色用墨绿'), self.PICKS[2]])
+        self.assertEqual(sorted((row.rule, row.status) for row in self.rows()), [('主色用深蓝', 'active'), ('学术汇报主色用灰', 'active')])
+
+    def test_seed_tenant_isolation(self):
+        self.make(owner='owner-b', category='layout', slot='palette', rule='主色用墨绿')
+        mine = self.habits.seed_onboarding('owner-a', self.PICKS)
+        # Another owner's explicit habit neither blocks this owner's pick nor is touched by it.
+        self.assertEqual((len(mine['created']), mine['skipped']), (3, []))
+        theirs = self.habits.seed_onboarding('owner-b', [dict(self.PICKS[0], rule='主色用橙'), self.PICKS[2]])
+        self.assertEqual(theirs['skipped'], [{'category': 'layout', 'slot': 'palette', 'reason': 'explicit'}])
+        self.assertEqual([x['slot'] for x in theirs['created']], ['banned_chart_types'])
+        self.assertEqual({row.status for row in self.rows()}, {'active'})
+        self.assertEqual(sorted(x['rule'] for x in self.habits.list('owner-b')['items']), ['不使用三维图表', '主色用墨绿'])
+        self.assertEqual(len(self.habits.list('owner-a')['items']), 3)
+        self.assertEqual({row.owner_id for row in self.models.DesignHabitRevision.query.filter_by(action='onboarding').all()}, {'owner-a', 'owner-b'})
+        self.assertFalse({x['id'] for x in mine['created']} & {x['id'] for x in self.habits.list('owner-b')['items']})
+
+    def test_seed_respects_limits(self):
+        now = datetime.utcnow()
+        fill = lambda count, status: db.session.add_all([self.models.DesignHabit(layer='personal', owner_id='owner-a',
+            category='layout', slot='other', scope=dumps({'page_role': '%s%d' % (status, index)}), rule='r', status=status,
+            valid_from=now) for index in range(count)])
+        fill(98, 'active'); db.session.commit()
+        # Room for two, three asked: nothing is stored.
+        self.assertCode('HABIT_LIMIT', 409, self.habits.seed_onboarding, 'owner-a', self.PICKS)
+        self.assertEqual((len(self.rows()), self.models.DesignHabitRevision.query.count()), (98, 0))
+        self.assertEqual(len(self.habits.seed_onboarding('owner-a', self.PICKS[:2])['created']), 2)
+        self.assertCode('HABIT_LIMIT', 409, self.habits.seed_onboarding, 'owner-a', self.PICKS[2:])
+        # Picks that create nothing are answered even at the limit, and other owners are not affected.
+        self.assertEqual(len(self.habits.seed_onboarding('owner-a', self.PICKS[:2])['skipped']), 2)
+        self.assertEqual(len(self.habits.seed_onboarding('owner-b', self.PICKS)['created']), 3)
+        # Shelved habits count against what may be stored in total.
+        self.models.DesignHabit.query.filter_by(owner_id='owner-a').delete(); db.session.commit()
+        fill(499, 'dormant'); db.session.commit()
+        self.assertCode('HABIT_LIMIT', 409, self.habits.seed_onboarding, 'owner-a', self.PICKS[:2])
+        self.assertEqual(len(self.rows(status='active')), 0)
+        self.assertEqual(len(self.habits.seed_onboarding('owner-a', self.PICKS[:1])['created']), 1)
+
+    def test_seed_while_paused_stores_but_applies_nothing(self):
+        # Same as create(): the global pause holds habits back from use, it does not refuse storing them.
+        self.habits.set_paused('owner-a', True)
+        self.assertEqual(self.make(category='layout', slot='fonts')['status'], 'active')
+        result = self.habits.seed_onboarding('owner-a', self.PICKS)
+        self.assertEqual([(x['status'], x['paused']) for x in result['created']], [('active', False)] * 3)
+        self.assertEqual(self.habits.active_for('owner-a', {}), [])
+        self.habits.set_paused('owner-a', False)
+        self.assertEqual(len(self.habits.active_for('owner-a', {'purpose': 'research'})), 4)
+
+    def test_active_for_orders_explicit_then_onboarding_then_inferred(self):
+        base = datetime.utcnow() - timedelta(days=1)
+        # Inferred is the newest and explicit the oldest, so only the origin can produce the expected order.
+        self.make(category='layout', slot='fonts', rule='explicit')
+        self.models.DesignHabit.query.update({'created_at': base})
+        db.session.add(self.models.DesignHabit(layer='personal', owner_id='owner-a', category='layout', slot='whitespace',
+            scope='{}', rule='inferred', origin='inferred', status='active', valid_from=base, created_at=datetime.utcnow() + timedelta(hours=1)))
+        db.session.commit()
+        seeded = self.habits.seed_onboarding('owner-a', [{'category': 'layout', 'slot': 'palette', 'rule': 'onboarding'},
+                                                        {'category': 'layout', 'slot': 'alignment', 'rule': 'onboarding pinned later'}])
+        self.assertEqual([x['rule'] for x in self.habits.active_for('owner-a', {})][:1] + [x['origin'] for x in self.habits.active_for('owner-a', {})],
+                         ['explicit', 'explicit', 'onboarding', 'onboarding', 'inferred'])
+        # Pinning still comes first, whatever the origin; an onboarding habit is managed like any other.
+        self.habits.update('owner-a', seeded['created'][1]['id'], {'pinned': True, 'version': 1})
+        self.assertEqual([x['rule'] for x in self.habits.active_for('owner-a', {})],
+                         ['onboarding pinned later', 'explicit', 'onboarding', 'inferred'])
+        context = self.memory.retrieve('owner-a', '{}')['rules']
+        self.assertEqual([rule['rule'] for rule in context], ['onboarding pinned later', 'explicit', 'onboarding', 'inferred'])
 
 
 class IntegrationTests(HabitFixture):
@@ -761,6 +1128,24 @@ class HttpTests(HabitFixture):
         self.assertEqual(sorted(seen), list(range(90)))
         self.assertGreater(len(json.dumps(seen)) + 90 * 2400 * 6, 1024 * 1024)  # more than one bridge answer in total
         self.assertLess(largest, 1024 * 1024)  # every single answer fits the platform bridge
+        picks = [{'category': 'layout', 'slot': 'palette', 'rule': '主色用橙'}, {'category': 'layout', 'slot': 'fonts', 'rule': '中文用微软雅黑'}]
+        self.assertEqual(self.call('post', '/habits/onboarding', user=None, json={'items': picks})[0], 401)
+        for body in (None, [], {}, picks, {'items': picks, 'origin': 'explicit'}, {'items': picks, 'owner_id': 'owner-b'}):
+            status, answer = self.call('post', '/habits/onboarding', json=body)
+            self.assertEqual((status, answer['error']['code']), (400, 'INVALID_REQUEST'))
+        for body in ({'items': []}, {'items': 'x'}, {'items': picks + [{'category': 'layout'}]}, {'items': picks * 7},
+                     {'items': [dict(picks[1], origin='explicit')]}):
+            status, answer = self.call('post', '/habits/onboarding', json=body)
+            self.assertEqual((status, answer['error']['code']), (400, 'DESIGN_MEMORY_INVALID'))
+        status, body = self.call('post', '/habits/onboarding', json={'items': picks})
+        self.assertEqual((status, body['data']['skipped']), (200, [{'category': 'layout', 'slot': 'palette', 'reason': 'explicit'}]))
+        self.assertEqual([(x['slot'], x['origin'], x['status']) for x in body['data']['created']], [('fonts', 'onboarding', 'active')])
+        seeded = body['data']['created'][0]['id']
+        self.assertEqual(self.call('post', '/habits/onboarding', json={'items': picks})[1]['data']['created'], [])
+        self.assertEqual(sorted(x['origin'] for x in self.call('get', '/habits')[1]['data']['items']), ['explicit', 'onboarding'])
+        self.assertEqual(self.call('get', '/habits', user='owner-b')[1]['data']['items'], [])
+        self.assertEqual(self.call('delete', '/habits/' + seeded, user='owner-b')[0], 404)
+        self.assertEqual(self.call('delete', '/habits/' + seeded)[1]['data'], {'deleted': True})
         self.assertEqual(self.call('post', '/habits/reset', json={})[0], 400)
         self.assertEqual(self.call('post', '/habits/reset', json={'confirm': 'true'})[0], 400)
         self.assertEqual(self.call('post', '/habits/reset', user='owner-b', json={'confirm': True})[1]['data'], {'deleted': 0})

@@ -73,6 +73,15 @@ def create_habit():
     return habits(lambda service: service.create(request.current_user.id, request.get_json(silent=True)))
 
 
+@wuyu_design_memory_bp.post('/habits/onboarding')
+@feature_required('work')
+def seed_onboarding_habits():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or set(payload) != {'items'}:
+        return error_response('INVALID_REQUEST', '请提供初始设置时选择的习惯。', 400)
+    return habits(lambda service: service.seed_onboarding(request.current_user.id, payload['items']))
+
+
 @wuyu_design_memory_bp.patch('/habits/<habit_id>')
 @feature_required('work')
 def update_habit(habit_id):

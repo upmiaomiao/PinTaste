@@ -15,6 +15,9 @@ except ImportError:  # Route functions stay testable where only the model layer 
     TestClient = None
 
 HABIT_ID = '0b0f6f4e-6c59-4a55-9d0e-3c5d6f1f2a10'
+PICKS = [{'category': 'layout', 'slot': 'palette', 'rule': '主色用深蓝'},
+         {'category': 'integration', 'slot': 'title_style', 'rule': '标题写成结论句', 'scope': {'purpose': 'research'},
+          'value': {'form': 'conclusion'}}]
 
 
 def member(work=True):
@@ -64,6 +67,7 @@ class DesignHabitProxyTests(unittest.TestCase):
         api.design_habit_delete(HABIT_ID, request, user)
         api.design_habits_settings(api.DesignHabitSettingsInput(paused=True), request, user)
         api.design_habits_reset(api.DesignHabitResetInput(confirm=True), request, user)
+        api.design_habits_onboarding(api.DesignHabitOnboardingInput(items=PICKS), request, user)
         result = api.design_habits_export(request, user)
         base = '/api/design-memory/habits'
         self.assertEqual([call[:3] for call in self.bridge.calls], [
@@ -73,6 +77,7 @@ class DesignHabitProxyTests(unittest.TestCase):
             ('DELETE', base + '/' + HABIT_ID, None),
             ('PUT', base + '/settings', {'paused': True}),
             ('POST', base + '/reset', {'confirm': True}),
+            ('POST', base + '/onboarding', {'items': PICKS}),
             ('GET', base + '/export', None),
         ])
         self.assertEqual(result, {'echo': base + '/export'})
@@ -86,6 +91,7 @@ class DesignHabitProxyTests(unittest.TestCase):
             lambda user: api.design_habits_export(self.request, user),
             lambda user: api.design_habit_delete(HABIT_ID, self.request, user),
             lambda user: api.design_habits_reset(api.DesignHabitResetInput(confirm=True), self.request, user),
+            lambda user: api.design_habits_onboarding(api.DesignHabitOnboardingInput(items=PICKS), self.request, user),
         ]
         for user in (member(work=False), member() | {'active': False}):
             for action in actions:
@@ -115,6 +121,11 @@ class DesignHabitProxyTests(unittest.TestCase):
             with self.assertRaises(HTTPException) as caught:
                 api.design_habit_create(body, self.request, member())
             self.assertEqual((caught.exception.status_code, caught.exception.detail), (400, code))
+            # Every habit of a first-run submission is held to the same bounds, wherever it stands in the list.
+            picks = api.DesignHabitOnboardingInput(items=PICKS + [body.model_dump(exclude_none=True)])
+            with self.assertRaises(HTTPException) as caught:
+                api.design_habits_onboarding(picks, self.request, member())
+            self.assertEqual((caught.exception.status_code, caught.exception.detail), (400, code))
         self.assertEqual((self.bridge.calls, self.bridge.sessions), ([], []))
 
     def test_export_is_fetched_page_by_page(self):
@@ -141,6 +152,16 @@ class DesignHabitProxyTests(unittest.TestCase):
                       {'origin': 'inferred'}, {'status': 'active'}, {'layer': 'system'}):
             with self.assertRaises(ValidationError, msg=extra):
                 api.DesignHabitInput(**(valid | extra))
+        api.DesignHabitOnboardingInput(items=[valid] * 12)
+        for body in ({}, {'items': []}, {'items': [valid] * 13}, {'items': valid}, {'items': [valid], 'origin': 'onboarding'},
+                     {'items': [valid], 'owner_id': 'u2'}, {'items': [valid, {'category': 'layout', 'slot': 'palette'}]},
+                     # The caller chooses neither origin, status, owner nor pinning for a seeded habit.
+                     *({'items': [valid, valid | extra]} for extra in (
+                         {'category': 'system'}, {'slot': 'Bad-Slot'}, {'rule': ''}, {'rule': '长' * 301}, {'scope': {'owner_id': 'u2'}},
+                         {'scope': {'purpose': 3}}, {'value': ['red']}, {'pinned': True}, {'origin': 'explicit'},
+                         {'status': 'candidate'}, {'owner_id': 'u2'}, {'layer': 'system'}))):
+            with self.assertRaises(ValidationError, msg=body):
+                api.DesignHabitOnboardingInput(**body)
         api.DesignHabitPatchInput(version=2, status='revoked', scope={})
         for body in ({}, {'version': '2'}, {'version': 0}, {'version': 2, 'status': 'candidate'}, {'version': 2, 'rule': ''},
                      {'version': 2, 'paused': 1}, {'version': 2, 'owner_id': 'u2'}, {'version': 2, 'category': 'layout'}):
@@ -191,14 +212,16 @@ class DesignHabitRoutingTests(unittest.TestCase):
         ok = [('GET', base, None), ('GET', base + '/export', None), ('PUT', base + '/settings', {'paused': False}),
               ('POST', base + '/reset', {'confirm': True}), ('DELETE', base + '/' + HABIT_ID, None),
               ('POST', base, {'category': 'integration', 'slot': 'title_style', 'rule': '标题写成结论'}),
-              ('PATCH', base + '/' + HABIT_ID, {'version': 1, 'status': 'active'})]
+              ('PATCH', base + '/' + HABIT_ID, {'version': 1, 'status': 'active'}),
+              ('POST', base + '/onboarding', {'items': PICKS})]
         for method, path, body in ok:
             response = send(method, path, json=body, headers=self.headers)
             self.assertEqual(response.status_code, 200, (method, path, response.text))
         self.assertEqual([call[1] for call in self.bridge.calls], [
             '/api/design-memory/habits', '/api/design-memory/habits/export', '/api/design-memory/habits/settings',
             '/api/design-memory/habits/reset', '/api/design-memory/habits/' + HABIT_ID, '/api/design-memory/habits',
-            '/api/design-memory/habits/' + HABIT_ID])
+            '/api/design-memory/habits/' + HABIT_ID, '/api/design-memory/habits/onboarding'])
+        self.assertEqual(self.bridge.calls[-1][:3], ('POST', '/api/design-memory/habits/onboarding', {'items': PICKS}))
         cursor = 'e.20261118T101112.123456.' + HABIT_ID
         self.assertEqual(send('GET', base + '/export?cursor=' + cursor, headers=self.headers).status_code, 200)
         self.assertEqual(self.bridge.calls[-1][1], '/api/design-memory/habits/export/' + cursor)
@@ -210,6 +233,14 @@ class DesignHabitRoutingTests(unittest.TestCase):
                                            ('PATCH', base + '/' + HABIT_ID, {'version': 1}, 400),
                                            ('PUT', base + '/settings', {'paused': 'no'}, 422),
                                            ('POST', base + '/reset', {}, 422),
+                                           ('POST', base + '/onboarding', {}, 422),
+                                           ('POST', base + '/onboarding', {'items': []}, 422),
+                                           ('POST', base + '/onboarding', PICKS, 422),
+                                           ('POST', base + '/onboarding', {'items': PICKS * 7}, 422),
+                                           ('POST', base + '/onboarding', {'items': PICKS, 'origin': 'explicit'}, 422),
+                                           ('POST', base + '/onboarding', {'items': [PICKS[0] | {'origin': 'explicit'}]}, 422),
+                                           ('POST', base + '/onboarding', {'items': [PICKS[0] | {'scope': {'purpose': ' '}}]}, 400),
+                                           ('GET', base + '/onboarding', None, 405),
                                            ('POST', base + '/reset', {'confirm': False}, 400),
                                            ('DELETE', base + '/' + 'a' * 37, None, 400)]:
             response = send(method, path, json=body, headers=self.headers)
@@ -222,7 +253,8 @@ class DesignHabitRoutingTests(unittest.TestCase):
         self.app.dependency_overrides[auth.current] = anonymous
         base = '/api/work/design-habits'
         for method, path, body in [('GET', base, None), ('GET', base + '/export', None), ('DELETE', base + '/' + HABIT_ID, None),
-                                   ('POST', base + '/reset', {'confirm': True}), ('PUT', base + '/settings', {'paused': True})]:
+                                   ('POST', base + '/reset', {'confirm': True}), ('PUT', base + '/settings', {'paused': True}),
+                                   ('POST', base + '/onboarding', {'items': PICKS})]:
             self.assertEqual(self.client.request(method, path, json=body).status_code, 401, (method, path))
         self.assertEqual(self.bridge.calls, [])
 
