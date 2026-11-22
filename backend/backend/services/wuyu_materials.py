@@ -77,7 +77,7 @@ def read_verified_pdf_page(path, config, expected_sha256, page_number, cancel_ch
     original = allowed_file(path, roots)
     if original.suffix.lower() != '.pdf':
         raise PipelineError('invalid_pdf', '原页复核只接受PDF来源。')
-    if original.stat().st_size > min(100 * 1024 * 1024, int(config.get('WUYU_MAX_MATERIAL_BYTES', 100 * 1024 * 1024))):
+    if original.stat().st_size > min(200 * 1024 * 1024, int(config.get('WUYU_MAX_MATERIAL_BYTES', 200 * 1024 * 1024))):  # op189
         raise PipelineError('material_limit', '原PDF超过本地核对大小限制。')
     digest = hashlib.sha256()
     with original.open('rb') as stream:
@@ -183,7 +183,7 @@ def parse_local_material(path, config, filename=None, cancel_check=None, output_
     if isinstance(roots, str):
         roots = [roots]
     p = allowed_file(path, roots)
-    max_bytes = int(config.get('WUYU_MAX_MATERIAL_BYTES', 100 * 1024 * 1024))
+    max_bytes = int(config.get('WUYU_MAX_MATERIAL_BYTES', 200 * 1024 * 1024))  # op189
     if p.stat().st_size > max_bytes:
         raise PipelineError('material_limit', '材料超过本地解析大小限制。')
     hasher = hashlib.sha256()

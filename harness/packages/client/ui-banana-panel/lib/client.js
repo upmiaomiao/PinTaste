@@ -3962,7 +3962,7 @@ window.__ModuleLoader__.load({
 			const prepared = uploads.rows.filter((row) => row.phase === "attached" && !row.sent).length;
 			const pending = uploads.rows.filter((row) => row.phase === "staged").length, uncheckedFailure = uploads.rows.some((row) => !row.submitted && row.phase === "failed"), submittedFailure = uploads.rows.some((row) => row.submitted && (row.phase === "failed" || row.phase === "paused"));
 			const error = (code) => t(materialUploadErrorKey(code), {
-				mb: limits ? mb(limits.max_file_bytes) : 50,
+				mb: limits ? mb(limits.max_file_bytes) : 200,
 				count: limits?.max_project_files || 50
 			});
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
@@ -9021,7 +9021,7 @@ window.__ModuleLoader__.load({
 			return new Promise((resolve, reject) => {
 				const xhr = makeRequest(), abort = () => xhr.abort(), finish = () => signal.removeEventListener("abort", abort);
 				xhr.open("POST", materialApiUrl(mcpUrl, "upload"));
-				xhr.timeout = 18e4;
+				xhr.timeout = 9e5;
 				xhr.withCredentials = false;
 				const headers = {
 					...token ? { Authorization: `Bearer ${token}` } : {},

@@ -7,7 +7,7 @@ import { pipeline } from "node:stream/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { BananaApiError } from "./api-client.js";
 import { projectIdFromHandle } from "./tokens.js";
-export const DEFAULT_MATERIAL_UPLOAD_LIMITS = { max_file_bytes: 50 * 1024 * 1024 - 1, max_project_files: 50, max_batch_files: 50, max_batch_bytes: 500 * 1024 * 1024 };
+export const DEFAULT_MATERIAL_UPLOAD_LIMITS = { max_file_bytes: 200 * 1024 * 1024, max_project_files: 50, max_batch_files: 50, max_batch_bytes: 200 * 1024 * 1024 }; // op189
 class UploadFailure extends Error {
     status;
     code;
@@ -116,7 +116,7 @@ export function registerMaterialUploadRoutes(app, config, api, authorized) {
         };
         req.once("aborted", disconnect);
         res.once("close", disconnect);
-        const signal = AbortSignal.any([abort.signal, AbortSignal.timeout(config.materialUploadTimeoutMs ?? 180000)]);
+        const signal = AbortSignal.any([abort.signal, AbortSignal.timeout(config.materialUploadTimeoutMs ?? 900000)]);
         try {
             context.stage = "metadata";
             const file = metadata(req, limits);

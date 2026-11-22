@@ -88,8 +88,8 @@ class MaterialProcessing:
         return public
 
     def material_limits(self):
-        return {'max_file_bytes': min(int(self.ports.app().config.get('WUYU_MAX_MATERIAL_BYTES', 50 * 1024 * 1024 - 1)), 50 * 1024 * 1024 - 1),
-                'max_project_files': 50, 'max_batch_files': 50, 'max_batch_bytes': 500 * 1024 * 1024,
+        return {'max_file_bytes': min(int(self.ports.app().config.get('WUYU_MAX_MATERIAL_BYTES', 200 * 1024 * 1024)), 200 * 1024 * 1024),  # op189
+                'max_project_files': 50, 'max_batch_files': 50, 'max_batch_bytes': 200 * 1024 * 1024,  # op189: 200MB per batch
                 **self.ports.hook_material_capacity(dict(self.ports.app().config))}
 
     def add_materials(self, project_id, files, metadata, user_id, role='material', upload_id=None,
