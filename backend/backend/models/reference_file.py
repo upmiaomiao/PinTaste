@@ -3,6 +3,7 @@ Reference File model - stores uploaded reference files and their parsed content
 """
 import uuid
 from datetime import datetime
+from sqlalchemy.orm import validates
 from . import db
 
 
@@ -26,6 +27,13 @@ class ReferenceFile(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    @validates('markdown_content', 'error_message')
+    def _strip_nul(self, key, value):
+        # op188: PostgreSQL text cannot store U+0000 (some PDF parsers emit it).
+        if isinstance(value, str) and '\x00' in value:
+            return value.replace('\x00', '')
+        return value
+
     # Relationships
     project = db.relationship('Project', backref='reference_files', foreign_keys=[project_id])
     

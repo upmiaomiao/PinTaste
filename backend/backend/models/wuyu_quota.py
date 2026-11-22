@@ -41,7 +41,7 @@ class QuotaReservation(db.Model):
     user_id = db.Column(db.String(36), nullable=False)
     operation_key = db.Column(db.String(160), nullable=False)
     fingerprint = db.Column(db.String(64), nullable=False)
-    kind = db.Column(db.String(12), nullable=False)
+    kind = db.Column(db.String(32), nullable=False)  # op188: 'wechat_search' is 13 chars
     status = db.Column(db.String(12), nullable=False)
     day = db.Column(db.String(10), nullable=False)
     held_pages = db.Column(db.BigInteger, nullable=False)
@@ -70,7 +70,7 @@ class QuotaLedger(db.Model):
     reservation_id = db.Column(db.String(36), db.ForeignKey('wuyu_quota_reservations.id'), nullable=True)
     actor_user_id = db.Column(db.String(36), nullable=True)
     event = db.Column(db.String(16), nullable=False)
-    kind = db.Column(db.String(12), nullable=True)
+    kind = db.Column(db.String(32), nullable=True)  # op188: 'wechat_search' is 13 chars
     day = db.Column(db.String(10), nullable=False)
     pages = db.Column(db.BigInteger, nullable=False, default=0)
     points = db.Column(db.BigInteger, nullable=False, default=0)
