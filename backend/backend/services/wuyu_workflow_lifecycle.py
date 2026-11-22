@@ -16,6 +16,8 @@ from typing import Any, Callable
 
 from sqlalchemy import update
 from .wuyu_resource_limits import memory_admission
+from workflow_execution import (worker_queue_block_reason, load_worker_admission_scope,
+                                worker_admission_block_reason)
 from .wuyu_page_execution import shutdown_page_executor
 from .wuyu_workflow_terminal import TerminalPersistence, TerminalPorts
 
@@ -155,6 +157,8 @@ def _claim(self, job_id):
     job = db.session.get(WuyuWorkflowJob, job_id)
     if not job or job.status != 'queued':
         return False
+    if worker_admission_block_reason(job.id):
+        return False
     if not memory_admission(self.app.config)['allowed']:
         return False
     occupied = self.terminal_owner.occupied()
@@ -176,6 +180,9 @@ def _claim(self, job_id):
     # be able to produce its image-only PPTX when tracing failed.
     image_export = job.action == 'export' and json.loads(job.payload).get('format', 'editable_pptx') != 'editable_pptx'
     if body['paused'] and not image_export:
+        return False
+    # Re-read immediately before the claim: a scope may expire/change after queue ordering.
+    if worker_admission_block_reason(job.id):
         return False
     claimed = db.session.execute(update(WuyuWorkflow).where(WuyuWorkflow.project_id == job.project_id,
                                                             WuyuWorkflow.active_job_id.is_(None)).values(active_job_id=job.id)).rowcount
@@ -223,7 +230,16 @@ def _fair_queue(self, limit=100):
     identities.update({key: claim.actor_user_id for key, claim in occupied.items()})
     for user_id in identities.values():
         running[user_id] = running.get(user_id, 0) + 1
-    pending = WuyuWorkflowJob.query.filter_by(status='queued').order_by(WuyuWorkflowJob.created_at).limit(200).all()
+    scope = load_worker_admission_scope()
+    if scope.status == 'hold':
+        return []
+    pending_query = WuyuWorkflowJob.query.filter_by(status='queued')
+    if scope.status == 'restricted':
+        if not scope.allowed_job_ids:
+            return []
+        # Filter before the bounded query so held jobs cannot hide an allowed job after row200.
+        pending_query = pending_query.filter(WuyuWorkflowJob.id.in_(scope.allowed_job_ids))
+    pending = pending_query.order_by(WuyuWorkflowJob.created_at).limit(200).all()
     ordered = []
     while pending and len(ordered) < limit:
         actor_limit = int(self.app.config.get('WUYU_WORKFLOW_PER_ACTOR', 0))
@@ -243,12 +259,23 @@ def queue_snapshot(self, job):
     """Where a queued job stands, in words a user can act on. None unless it is waiting."""
     if job.status != 'queued':
         return None
+    block_reason = worker_admission_block_reason(job.id)
+    if block_reason:
+        pass  # Operational maintenance takes precedence over an unrelated memory observation.
+    elif self.execution_mode == 'api':
+        block_reason = worker_queue_block_reason()
+    else:
+        admission = memory_admission(self.app.config)
+        block_reason = None if admission.get('allowed') is True else (
+            'memory_wait' if admission.get('reason') == 'memory_wait' else 'worker_state_unknown')
     order = [item.id for item in self._fair_queue(limit=200)]
-    if job.id not in order:
+    if job.id not in order and block_reason is None:
         return None
     busy = WuyuWorkflowJob.query.filter_by(status='running').count()
-    return {'position': order.index(job.id) + 1, 'queued': len(order), 'running': busy,
-            'workers': int(self.app.config.get('WUYU_WORKFLOW_WORKERS', 2))}
+    return {'position': order.index(job.id) + 1 if job.id in order else None,
+            'queued': len(order), 'running': busy,
+            'workers': int(self.app.config.get('WUYU_WORKFLOW_WORKERS', 2)),
+            **({'block_reason': block_reason} if block_reason else {})}
 
 
 def _schedule(self):

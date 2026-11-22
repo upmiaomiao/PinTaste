@@ -189,13 +189,15 @@ export function conversationSummary(snapshot, frontendUrl = "https://test-ai.wuy
     const readingStage = reading.source_reading_complete === true || ["pending", "running", "completed"].includes(String(object(reading.synthesis).status)) ? "planning" : "reading";
     const readingCount = key => Number.isSafeInteger(reading[key]) && reading[key] >= 0 ? reading[key] : 0;
     const relayout = object(snapshot.relayout);
-    if (pending.some(job => job.action === "_prepare_relayout")) {
+    const queueBlock = !failure && !snapshot.paused && !pending.some(job => job.status === "running")
+        ? pending.find(job => ["memory_wait", "worker_state_unknown", "maintenance_hold"].includes(object(job.queue).block_reason)) : undefined;
+    if (!queueBlock && pending.some(job => job.action === "_prepare_relayout")) {
         return { stage: "relayout_import", summary: "正在将原PPT转为逐页图片并提取原文；尚未调用模型。", next_question: null,
             choices: [], required_action: "wait_presentation_workflow", requires_user_confirmation: false,
             pending_jobs: pending, progress: {stage: relayout.status, completed: relayout.completed_pages || 0, total: relayout.page_count || 0},
             stop_wait: false, detail_url: detail("materials") };
     }
-    if (!failure && brief.task_mode === "relayout" && relayout.status !== "ready") {
+    if (!queueBlock && !failure && brief.task_mode === "relayout" && relayout.status !== "ready") {
         const original = objects(snapshot.materials).find(m => m.role === "material" && String(m.filename).toLowerCase().endsWith(".pptx"));
         const waiting = pending.length > 0;
         return {stage:"relayout_intake",summary:waiting?"原稿正在本地解析，请等待同一任务完成。":original?.status==="completed"?"原稿已上传，接下来按原页转图并准备重新排版。":"请先上传一份PPTX原稿；页数和语言跟随原稿。",next_question:null,choices:[],
@@ -509,9 +511,23 @@ export function conversationSummary(snapshot, frontendUrl = "https://test-ai.wuy
             requires_explicit_user_request: true, may_call_paid_model: true,
             instruction: "Current images are already reviewed. Only on an explicit editable-conversion request within approved cost scope, use this action with a stable request_id. Do not call start_tracing or confirm these same image versions again. Reading this hint starts no work." }
         : null;
+    if (queueBlock) {
+        stage = "queued";
+        summary = object(queueBlock.queue).block_reason === "maintenance_hold"
+            ? "后台维护验证中，当前任务保留排队，管理员放行后继续；无需重新上传或重试。"
+            : object(queueBlock.queue).block_reason === "memory_wait"
+            ? "任务已排队，正在等待后台释放内存，尚未开始执行。原材料和已完成内容保留；无需重新上传、重试或新建项目。资源恢复后原任务会继续排队执行；持续未恢复请联系管理员。"
+            : "任务已排队，暂时无法确认后台执行资源状态，尚未确认开始执行。原材料和已完成内容保留；请联系管理员检查后台，无需重新上传或重复提交。";
+        question = null;
+        choices = [];
+        requiredAction = null;
+        userRequired = false;
+    }
     const stopWait = snapshot.stop_wait === true || requiredAction !== "wait_presentation_workflow";
     return { stage, summary, next_question: question, choices, requires_user_confirmation: userRequired,
         required_action: requiredAction, review_target: target, revision: snapshot.revision,
+        ...(queueBlock ? { queue_block: { reason: object(queueBlock.queue).block_reason, job_id: queueBlock.id,
+            instruction: "This task is still queued. Explain the resource block; do not diagnose a corrupt document, retry, re-upload, create another project or poll in a loop. The original task stays queued. If the block persists, an administrator must check the worker." } } : {}),
         ...(requiredAction === "export" && workflow.output_preference === "image" && capabilities.image_pptx === true
             ? { required_action_payload: { format: "pptx" } } : {}),
         ...(editableConversion ? { editable_conversion: editableConversion } : {}),
@@ -544,7 +560,7 @@ function workflowDecisionContent(snapshot) {
     const conversation = object(snapshot.conversation), target = object(conversation.review_target);
     const allowedActions = new Set([...actions, "get_presentation_workflow", "wait_presentation_workflow"]);
     const allowedPhases = new Set(["requirements", "samples", "template_review", "template_selection", "generation_request", "page_review", "page_generation", "final_image_review", "tracing", "quality_check", "ready_to_export", "exporting", "exported"]);
-    const allowedStages = new Set([...allowedPhases, "quota_exhausted", "research_recovery", "research_reuse", "research_choice", "research", "research_paused", "research_review", "paused", "delivered_partial", "material_recovery", "failed", "content_plan_recovery", "working", "draft_review", "reading", "delivered_images", "focused_ready"]);
+    const allowedStages = new Set([...allowedPhases, "quota_exhausted", "research_recovery", "research_reuse", "research_choice", "research", "research_paused", "research_review", "paused", "delivered_partial", "material_recovery", "failed", "content_plan_recovery", "working", "queued", "draft_review", "reading", "delivered_images", "focused_ready"]);
     const action = typeof conversation.required_action === "string" && allowedActions.has(conversation.required_action)
         ? conversation.required_action : null;
     const reviewTarget = {};
@@ -566,6 +582,8 @@ function workflowDecisionContent(snapshot) {
         requires_user_confirmation: conversation.requires_user_confirmation === true,
         ...(action === "confirm_images" ? { review_context_missing: !imageTarget.success,
             same_version_user_decision_required: true, automatic_version_fill_allowed: false } : {}),
+        ...(["memory_wait", "worker_state_unknown", "maintenance_hold"].includes(object(conversation.queue_block).reason)
+            ? { queue_block: { reason: conversation.queue_block.reason }, stop_wait: true } : {}),
         read_starts_work: false, preview_is_not_approval: true,
         image_only_export: { action: "export", payload: { format: "pptx" }, may_call_paid_model: false },
         editable_conversion_requires_explicit_request_and_cost_scope: true };
@@ -663,7 +681,7 @@ export function workflowContent(snapshot, handle) {
     const decisionContent = workflowDecisionContent(snapshot);
     const conversation = object(snapshot.conversation);
     if (Object.hasOwn(snapshot, "editable_draft")) {
-        const decision = Object.fromEntries(["stage", "required_action", "requires_user_confirmation", "review_target", "stop_wait", "progress", "template_confirmation_via"]
+        const decision = Object.fromEntries(["stage", "required_action", "requires_user_confirmation", "review_target", "stop_wait", "queue_block", "progress", "template_confirmation_via"]
             .filter(key => Object.hasOwn(conversation, key)).map(key => [key, conversation[key]]));
         if (objects(conversation.pending_jobs).length)
             decision.pending_jobs = objects(conversation.pending_jobs).slice(0, 3);
@@ -690,7 +708,7 @@ export function workflowContent(snapshot, handle) {
         ...(snapshot.wait_status ? { wait_status: snapshot.wait_status, wait_job_id: snapshot.wait_job_id, changed: snapshot.changed } : {}),
         ...(snapshot.wait_status === "timeout" && conversation.stop_wait === false && objects(conversation.pending_jobs).length ? {
             wait_instruction: "本次有界状态等待已结束，后台任务仍在排队或运行；这不是阅读任务失败或任务超时。0/1 仅统计整份材料完成并校验后的数量，不是逐字进度。请继续使用同一 project_handle 和原 job_id 调用 wait_presentation_workflow，遵循 stop_wait；不要仅因计数暂时不变就断言卡住、改用逐段手读、重复 analyze_materials 或重试付费工作。真正失败、取消、暂停、需要用户决定或状态读取错误时停止等待。" } : {}),
-        ...(snapshot.wait_status && conversation.stop_wait ? { wait_instruction: conversation.stage === "delivered_partial" ?
+        ...(snapshot.wait_status && conversation.stop_wait ? { wait_instruction: conversation.queue_block?.reason === "maintenance_hold" ? "Maintenance verification is in progress. This task remains queued until an administrator releases it; do not retry, re-upload, create a project, or infer a material failure." : conversation.queue_block ? "The task is still queued because worker resources are blocked or cannot be verified. Explain conversation.summary, stop polling, and ask an administrator to check persistent blocking. Do not retry, re-upload, create a project, or describe this as document corruption or task failure." : conversation.stage === "delivered_partial" ?
                 "A version-bound mixed PPTX is ready. Deliver its actual download now, identify image-only pages, and stop blocking this conversation. Pending tracing continues independently; no new approval or paid retry is required." : conversation.stage === "failed" ?
                 "Stop waiting for this job. Explain the safe failure reason in conversation and ask before retrying. Do not repeat wait_presentation_workflow for the same terminal job." :
                 "This wait target is terminal or needs a user decision. Do not wait again for the same terminal job; consult conversation.required_action and pending_jobs for any other work." } : {}) };

@@ -9,7 +9,7 @@ import threading
 import time
 
 from workflow_execution import (execution_mode,heartbeat_ready,state_directory,
-                                 worker_owner,write_heartbeat)
+                                 worker_owner,write_heartbeat,public_worker_admission_scope)
 
 
 def load_app():
@@ -46,7 +46,9 @@ def write_capacity_snapshot(service, directory):
     if app is None or type(workers) is not int:
         return False
     from services.wuyu_resource_limits import memory_admission, resources
+    from wuyu_font_cache import load_font
     limits = resources(app)
+    font_cache = load_font.cache_info()
     body = {'schema_version': 1, 'pid': os.getpid(), 'recorded_at': time.time(),
             'executor_workers': workers,
             'per_actor_jobs': int(app.config.get('WUYU_WORKFLOW_PER_ACTOR', 0)),
@@ -54,6 +56,9 @@ def write_capacity_snapshot(service, directory):
             'page_resource_bytes': limits.budget.capacity if limits.budget else 0,
             'page_resource_used': limits.budget.used if limits.budget else 0,
             'memory_admission': memory_admission(app.config),
+            'admission_scope': public_worker_admission_scope(directory),
+            'font_cache': {'faces': font_cache.currsize, 'limit': font_cache.maxsize,
+                           'hits': font_cache.hits, 'misses': font_cache.misses},
             'pending_terminal': terminal_count(service),
             'active_terminal_attempts': terminal_attempt_count(service)}
     temporary = None

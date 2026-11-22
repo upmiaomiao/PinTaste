@@ -28,6 +28,41 @@ def cgroup_memory_current():
     return int(value)
 
 
+
+def cgroup_reclaimable_file(current):
+    """Conservative clean-inactive-file credit; missing data earns no credit.
+
+    Dirty/writeback counters cover ALL file lists. Subtract both from inactive
+    before giving credit, since their overlap/location cannot be established.
+    Shared memory is not evictable file cache. Never subtract anonymous/active
+    pages or assume that memory.stat's type and LRU counters partition equally.
+    """
+    try:
+        rows = Path('/proc/self/cgroup').read_text(encoding='ascii').splitlines()
+        own = next(line[3:] for line in rows if line.startswith('0::'))
+        parts = PurePosixPath(own).parts
+        if not own.startswith('/') or '..' in parts:
+            return 0
+        path = Path('/sys/fs/cgroup').joinpath(*parts[1:], 'memory.stat')
+        pairs = [line.split() for line in path.read_text(encoding='ascii').splitlines()]
+        stats = {}
+        for pair in pairs:
+            if len(pair) != 2 or pair[0] in stats or not pair[1].isdecimal():
+                return 0
+            stats[pair[0]] = int(pair[1])
+        required = ('file', 'shmem', 'inactive_file', 'file_dirty', 'file_writeback')
+        if type(current) is not int or current < 0:
+            return 0
+        if any(key not in stats or not 0 <= stats[key] <= current for key in required):
+            return 0
+        if any(stats[key] > stats['file'] for key in required[1:]):
+            return 0  # Inconsistent/non-atomic observations keep raw admission.
+        clean_inactive = max(0, stats['inactive_file'] - stats['file_dirty'] - stats['file_writeback'])
+        return min(current, clean_inactive, stats['file'] - stats['shmem'])
+    except (OSError, ValueError, StopIteration, UnicodeError):
+        return 0
+
+
 def memory_admission(config):
     high = int(config.get('WUYU_WORKFLOW_MEMORY_HIGH_BYTES', 0))
     reserve = int(config.get('WUYU_WORKFLOW_MEMORY_RESERVE_BYTES', 0))
@@ -37,9 +72,14 @@ def memory_admission(config):
         current = cgroup_memory_current()
     except (OSError, ValueError, StopIteration):
         return {'allowed': False, 'reason': 'memory_state_unknown'}
-    return {'allowed': current + max(0, reserve) <= high,
-            'reason': 'available' if current + max(0, reserve) <= high else 'memory_wait',
-            'current_bytes': current, 'admission_bytes': high, 'reserve_bytes': reserve}
+    reclaimable = cgroup_reclaimable_file(current)
+    working_set = current - reclaimable
+    allowed = working_set + max(0, reserve) <= high
+    return {'allowed': allowed,
+            'reason': 'available' if allowed else 'memory_wait',
+            'current_bytes': current, 'working_set_bytes': working_set,
+            'reclaimable_file_bytes': reclaimable,
+            'admission_bytes': high, 'reserve_bytes': reserve}
 
 
 class ByteBudget:

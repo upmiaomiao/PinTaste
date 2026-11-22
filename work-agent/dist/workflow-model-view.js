@@ -19,6 +19,11 @@ function pagePreview(value) {
         layout: pick(row(value.layout), ['structure', 'intent']), speaking_script_available: value.speaking_script_available === true || typeof value.speaking_script === 'string',
         ...(typeof (value.layout_rationale || value.layout_rationale_excerpt) === 'string' ? { layout_rationale_excerpt: (value.layout_rationale || value.layout_rationale_excerpt).slice(0, 180) } : {}), full_content_in_details: true };
 }
+function queueView(value) {
+    const queue = row(value);
+    return { ...pick(queue, ['position', 'queued', 'running', 'workers']),
+        ...(['memory_wait', 'worker_state_unknown', 'maintenance_hold'].includes(queue.block_reason) ? { block_reason: queue.block_reason } : {}) };
+}
 export function compactWorkflowSnapshot(snapshot) {
     const out = { ...snapshot };
     if (snapshot.relayout)
@@ -56,7 +61,7 @@ export function compactWorkflowSnapshot(snapshot) {
     if (Array.isArray(snapshot.artifacts))
         out.artifacts = rows(snapshot.artifacts).map(artifact => ({ ...pick(artifact, ['id', 'kind', 'filename', 'created_at', 'bytes']), metadata: pick(row(artifact.metadata), ['format', 'editability', 'editable_pages', 'image_only_pages', 'image_signature', 'hybrid_signature']) }));
     if (Array.isArray(snapshot.jobs))
-        out.jobs = rows(snapshot.jobs).map(job => pick(job, ['id', 'task_id', 'action', 'status', 'input_epoch', 'epoch', 'progress', 'error_code', 'error_message', 'retryable', 'delivery_status', 'created_at', 'updated_at']));
+        out.jobs = rows(snapshot.jobs).map(job => ({ ...pick(job, ['id', 'task_id', 'action', 'status', 'input_epoch', 'epoch', 'progress', 'error_code', 'error_message', 'retryable', 'delivery_status', 'created_at', 'updated_at']), ...(job.queue && typeof job.queue === 'object' ? { queue: queueView(job.queue) } : {}) }));
     out.detail_content = { tool: 'get_presentation_workflow', arguments: { draft_offset: 0, draft_limit: 2 }, instruction: 'Full current page wording is available on explicit draft_offset/draft_limit reads; the right panel already has all original figures, evidence and speaker notes. Previews are excerpts, never the complete source.' };
     if (snapshot.relayout) {
         // The panel retains the full snapshot in UI metadata. The conversation

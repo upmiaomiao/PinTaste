@@ -13,6 +13,7 @@ from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
 from PIL import Image, ImageFont, ImageDraw
 from html.parser import HTMLParser
+from wuyu_font_cache import measurement_font
 
 logger = logging.getLogger(__name__)
 
@@ -88,24 +89,15 @@ class PPTXBuilder:
     # 项目内置字体（Noto Sans CJK SC，支持中日韩文字）
     FONT_PATH = os.path.join(os.path.dirname(__file__), "..", "fonts", "NotoSansSC-Regular.ttf")
     
-    # Font cache: {size_pt: ImageFont}
-    _font_cache: Dict[float, ImageFont.FreeTypeFont] = {}
-    
     @classmethod
     def _get_font(cls, size_pt: float) -> Optional[ImageFont.FreeTypeFont]:
-        """Get font object for given size (with caching)"""
-        # Round to 0.5pt for cache efficiency
-        cache_key = round(size_pt * 2) / 2
-        
-        if cache_key not in cls._font_cache:
-            try:
-                cls._font_cache[cache_key] = ImageFont.truetype(cls.FONT_PATH, int(size_pt))
-            except Exception as e:
-                logger.warning(f"Failed to load font {cls.FONT_PATH}: {e}")
-                return None
-        
-        return cls._font_cache[cache_key]
-    
+        """Measure with a file-backed face from the shared bounded font cache."""
+        try:
+            return measurement_font(cls.FONT_PATH, int(size_pt))
+        except Exception as e:
+            logger.warning(f"Failed to load font {cls.FONT_PATH}: {e}")
+            return None
+
     @classmethod
     def _measure_text_width(cls, text: str, font_size_pt: float) -> Optional[float]:
         """

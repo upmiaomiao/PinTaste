@@ -7,7 +7,6 @@ a box which already fits is left untouched.
 """
 from functools import lru_cache
 import hashlib
-import io
 import math
 import os
 from pathlib import Path
@@ -16,10 +15,9 @@ import shutil
 import subprocess
 import unicodedata
 
-from PIL import ImageFont
-
 from .wuyu_errors import PipelineError
 from .wuyu_typography import CJK_FONT, LATIN_FONT
+from wuyu_font_cache import load_font as _load_font
 
 _SCALE = 4
 
@@ -35,8 +33,8 @@ def _cjk(char):
 def resolve_font(family, bold=False, italic=False, cjk=False):
     """Resolve like Fontconfig on Linux, or the Windows installed-font registry.
 
-    Font paths are private implementation details, absent from fit reports. Font
-    bytes are read into bounded caches so FreeType does not retain file handles.
+    Font paths are private implementation details, absent from fit reports.
+    File-backed faces use the shared bounded export measurement cache.
     """
     if shutil.which('fc-match'):
         pattern = family + (':weight=bold' if bold else '') + (':slant=italic' if italic else '')
@@ -85,17 +83,6 @@ def resolve_font(family, bold=False, italic=False, cjk=False):
         if best:
             return best[1:]
     return None
-
-
-@lru_cache(maxsize=24)
-def _font_bytes(path, modified_ns, length):
-    return Path(path).read_bytes()
-
-
-@lru_cache(maxsize=48)
-def _load_font(path, index, size, modified_ns, length):
-    return ImageFont.truetype(io.BytesIO(_font_bytes(path, modified_ns, length)),
-                              size=size, index=index)
 
 
 def _font(resolved, size_pt):
