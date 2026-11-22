@@ -6,6 +6,20 @@ from PIL import Image, ImageOps
 from .wuyu_errors import PipelineError, check_cancel
 from .wuyu_materials import allowed_file
 
+# Many vision backends reject a whole request when one image is more than 200:1
+# (a slide divider or hairline). Such pictures carry no readable content, so
+# they are never sent to the reader. 100:1 leaves headroom below that limit.
+MAX_VISUAL_ASPECT = 100
+
+
+def extreme_aspect(asset, limit=MAX_VISUAL_ASPECT):
+    """True for decorative strips whose recorded size exceeds the aspect limit."""
+    try:
+        width, height = int(asset.get('width') or 0), int(asset.get('height') or 0)
+    except (AttributeError, TypeError, ValueError):
+        return False
+    return width > 0 and height > 0 and max(width, height) / min(width, height) > limit
+
 
 def verify_reader_image_integrity(task, config, cancel_check=None):
     """Cached image ACKs remain valid only for the same accessible originals."""
@@ -45,6 +59,10 @@ def reader_images(task, config, cancel_check=None):
             with Image.open(io.BytesIO(raw)) as source:
                 image = ImageOps.exif_transpose(source).convert('RGB')
                 image.thumbnail((3072,3072),Image.Resampling.LANCZOS)
+                if max(image.size)/max(1,min(image.size))>MAX_VISUAL_ASPECT:
+                    # Never forward a strip the model backend would reject; the
+                    # reader plan already excludes these, this is the last guard.
+                    raise PipelineError('source_image_unreadable','这一张原图长宽比过于极端，无法作为图像阅读。可明确排除此图后继续读取其余文字和图片。')
                 if min(image.size)<32:
                     scale=32/min(image.size)
                     image=image.resize((round(image.width*scale),round(image.height*scale)),Image.Resampling.LANCZOS)

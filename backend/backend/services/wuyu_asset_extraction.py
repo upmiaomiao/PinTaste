@@ -104,7 +104,7 @@ def extract_source_assets(path, config, source_sha, filename, checkpoint, output
     out = Path(output_dir or p.parent / 'extracted_assets' / source_sha[:16]).resolve()
     if not roots or not any(p.is_relative_to(root) and out.is_relative_to(root) for root in roots):
         raise PipelineError('unsafe_material_path', 'Source asset output must be inside controlled material storage')
-    max_assets = max(1, min(int(config.get('WUYU_MAX_SOURCE_ASSETS', 200)), 600))
+    max_assets = max(1, min(int(config.get('WUYU_MAX_SOURCE_ASSETS', 400)), 600))
     max_bytes = max(1, min(int(config.get('WUYU_MAX_SOURCE_ASSET_BYTES', 64 * 1024 * 1024)), 200 * 1024 * 1024))
     assets, warnings, seen = [], [], set()
     consumed = 0
@@ -209,7 +209,12 @@ def extract_source_assets(path, config, source_sha, filename, checkpoint, output
     elif p.suffix.lower() in {'.docx', '.pptx', '.xlsx'}:
         with zipfile.ZipFile(p) as archive:
             locations = office_image_locations(archive, p.suffix.lower(), checkpoint)
-            for member in archive.infolist():
+            def page_order(member):
+                pages = [l.get('source', {}).get('page') for l in locations.get(member.filename, [])]
+                pages = [p for p in pages if isinstance(p, int)]
+                return min(pages) if pages else 10 ** 9
+            # Stable sort: a hit on the asset cap drops the last pages, not random ones.
+            for member in sorted(archive.infolist(), key=page_order):
                 checkpoint()
                 if re.fullmatch(r'(?:word|ppt|xl)/media/[^/]+\.(?:png|jpe?g|gif|tiff?|bmp|webp)', member.filename, re.I):
                     if member.file_size <= max_bytes:

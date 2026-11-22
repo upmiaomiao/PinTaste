@@ -233,8 +233,11 @@ def prepare_reading(materials, brief, config, cancel_check=None):
             row['status'] = 'parse_failed'
             issues.append({'code': error.code, 'material_id': ident})
             continue
+        from .wuyu_reading_visuals import extreme_aspect
+        # Decorative hairlines/dividers are neither sent to the model nor required
+        # to be acknowledged; the originals stay untouched in storage.
         visuals[ident] = [deepcopy(a) for a in current.get('source_assets',[])
-                          if isinstance(a,dict)and a.get('path')and a.get('sha256')]
+                          if isinstance(a,dict)and a.get('path')and a.get('sha256')and not extreme_aspect(a)]
         for asset in visuals[ident]:asset['material_id']=ident
         for warning in current.get('warnings',[]):
             if warning.get('code')in {'source_asset_limit_reached','source_asset_pdf_page_limit','office_media_partially_extracted'}:
@@ -244,7 +247,8 @@ def prepare_reading(materials, brief, config, cancel_check=None):
                           'figure_label': str(a.get('figure_label', '')),
                           'source': {k:v for k,v in a.get('source',{}).items()if k!='path'},
                           'nearby_text': str(a.get('nearby_text',''))}
-                         for a in current.get('source_assets', []) if isinstance(a, dict) and isinstance(a.get('id'), str)]
+                         for a in current.get('source_assets', []) if isinstance(a, dict) and isinstance(a.get('id'), str)
+                         and not extreme_aspect(a)]
         data[ident] = list(current.get('source_structured_data', {}))
         probe=_reader_task([{'id':'probe','chunk_id':'probe','material_id':ident,'text':'',
                              'char_start':0,'char_end':0,'source':{'filename':row['filename']}}],
