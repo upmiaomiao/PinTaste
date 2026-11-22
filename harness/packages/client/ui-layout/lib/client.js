@@ -425,8 +425,8 @@ window.__ModuleLoader__.load({
 		//#endregion
 		//#region src/client/locales.ts
 		/** Product-specific document metadata belongs to the layout locale seat. */
-		const zh = { "brand.work": "无隅工作" };
-		const en = { "brand.work": "Wuyu Work" };
+		const zh = { "brand.work": "PinTaste 工作" };
+		const en = { "brand.work": "PinTaste Work" };
 		//#endregion
 		//#region src/client/index.ts
 		/** Required services (cordis fiber inject — the loader passes all module exports as an object plugin). */
