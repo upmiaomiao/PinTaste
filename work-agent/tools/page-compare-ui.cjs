@@ -1,8 +1,11 @@
 // Adds the read-only before/after page comparison to the slides tab of the deployed panel.
 // Last step of the panel chain. Hash-locked to the dist/ui/index.html this checkout carried before the step
 // (image history and page lock applied; the requirements tab still present).
+// Staging op192: the patch was written against the 2026-11-15 snapshot (b8d3963d...). This checkout's panel had
+// since gained the PinTaste brand (op185) and the queue-reason notice (op186), so the pinned input is that panel,
+// e183eb9a...; the transformer's two fragments and its output contract are unchanged (output 5e12045d...).
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const BASELINE_SHA=process.env.WUYU_PANEL_BASELINE_SHA256||'b8d3963d0bee15382eadb8b482b9c18746738c3f25d4afda0d69fbb2b71033ad';
+const BASELINE_SHA=process.env.WUYU_PANEL_BASELINE_SHA256||'e183eb9af9de46a340a679fd5938dbb09226b2612a017ba592eaf956f1d5eda2';
 const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
 const panel='\n'+fs.readFileSync(path.join(__dirname,'page-compare-panel.js'),'utf8');
 const style='<style data-wuyu-page-compare>\n'+fs.readFileSync(path.join(__dirname,'page-compare.css'),'utf8')+'\n</style>';
