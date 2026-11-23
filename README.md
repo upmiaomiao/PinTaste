@@ -24,7 +24,7 @@
 每次改动（对应一个 `operations/opNNN-名称/` 操作目录）：
 
 1. **准备**：在操作目录里做候选副本、备份和测试（与以往做法一致），不直接改 `source`。
-2. **上线**：经确认后，把候选文件复制进 `source`（以及需要时复制进容器），重启对应服务，核对哈希。
+2. **上线**：经确认后，把候选文件复制进 `source`，按"测试站如何生效"一栏重启对应服务（后端见下方"后端上线方式"），核对哈希。
 3. **提交**：在 `source` 里、`main` 分支上提交，只 `git add` 本次改动的文件。提交说明第一行以 `opNNN:` 开头，正文写清改了什么、为什么，以及操作目录路径。
 4. **推送**：运行 `ops/git/push_checked.sh`。它先用 gitleaks 只扫描尚未推送的新提交，有发现就停止，否则推送到 GitHub。
 
@@ -47,9 +47,20 @@ python3 ../ops/build_static_assets_manifest.py dist
 
 Work 面板 `work-agent/dist/ui/index.html` 不能手改或用旧 TypeScript UI 重建，只能用各步骤的哈希锁定转换脚本生成（例如 `work-agent/tools/page-compare-ui.cjs`，见 `work-agent/PAGE_COMPARE.md`）。
 
+## 后端上线方式
+
+后端容器不挂载源码，代码在镜像里。**不要再用 `docker cp` 往运行中的容器里复制文件**（重建容器就会丢）。每次后端改动都做一个新镜像：
+
+1. 在操作目录建 `image-build-r1/{backend,worker}/`，各放一个只含改动文件的 `backend/` 目录和两行 Dockerfile：
+   `FROM <当前测试站镜像标签>` + `COPY backend/ /app/backend/`。镜像标签命名 `wuyu-staging-opNNN-{backend,worker}:YYYYMMDD-rN`。
+2. 构建后把镜像里的 `/app/backend` 导出，与 `source/backend/backend` 逐文件比对，必须为零差异（参考 `operations/op194-backend-image/overlay_diff.py`）；在 `docker run --rm --network none` 的一次性容器里跑相关测试。
+3. 用 `operations/op194-backend-image/deploy194.py` 同款脚本切换：克隆运行中容器的完整配置、只替换镜像；PPT 队列不空时拒绝执行；旧容器改名为 `<名称>-preNNN-<随机串>` 保留，失败时自动恢复旧容器。先切 `api` 再切 `worker`。
+4. 回退：停新容器并改名，把 `-preNNN-*` 改回原名再启动。
+
+当前测试站后端镜像：`wuyu-staging-op194-backend:20261123-r1`、`wuyu-staging-op194-worker:20261123-r1`，运行代码与 `main` 一致（op194 核对）。
+
 ## 后端注意事项
 
-- 测试站后端镜像目前是 `sha256:6571da12…`。op191 的 PPT 阅读修复和设计习惯后端是用 `docker cp` 复制进两个容器的，代码与本仓库 `main` 一致；**从镜像重建这两个容器前，必须先用 `main` 构建新镜像**，否则这些改动会丢失。
 - PostgreSQL 下后端拒绝通过 `create_app` 跑 Alembic，应用账号 `ppt_app91` 没有建表权限，表归迁移账号 `ppt_migrator91`，并逐表授权给应用账号（数据库没有默认授权）。改表结构请参照 `ops/postgres/migrate026_design_habits.py`：用迁移账号在单个事务里建表、授权、改版本号，并先在按真实角色恢复的副本上重演。
 
 ## 安全检查
