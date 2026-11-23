@@ -48,11 +48,31 @@ for _key in SLOT_KEYS:
     UNIQUE_SLOT[_slot] = None if _slot in UNIQUE_SLOT else _category
 NOTICE_DAYS, MAX_NOTICE = 14, 3
 GENERALIZING = ('以后', '今后', '每次', '每一次', '一律', '所有ppt', '所有的ppt', '都这样', '一直这样', '默认都', '统一都')
+# Content-truth and sourcing rules are platform rules for every deck, not personal design taste. The
+# assistant often writes them into requirements ("不虚构未读到的表格内容", "只用已核验内容"), so they recur
+# across projects and would otherwise be promoted. Checked on rule and quote, whatever the model says.
+SYSTEM_RULE_WORDS = ('虚构', '编造', '捏造', '杜撰', '核验', '核实', '未确认', '未识别', '未读到', '未读取', '未提供',
+                     '不补造', '补造', '幻觉', '真实性', '出处', '来源', '引用', '原文', '数值', '数据准确', '准确性')
+# A preference states a stance; a bare noun phrase ("厨余分出率") is not one.
+STANCE_WORDS = ('不要', '不用', '别', '避免', '减少', '去掉', '删', '少用', '少放', '不放', '不加', '不使用', '禁止',
+                '改用', '改成', '换成', '统一', '保持', '精简', '简洁', '简单', '克制', '留白', '希望', '喜欢', '偏好',
+                '太多', '太少', '太大', '太小', '太花', '太乱', '更', '尽量', '一定', '必须', '只用', '只要', '都用') + GENERALIZING
 PROCESSED = ('completed', 'skipped', 'failed')
 
 
 def _norm(text):
     return re.sub(r'\s+', '', str(text or '')).lower()
+
+
+def _bigrams(text):
+    text = re.sub(r'[\s，。、；：,.;:！!？?“”"\'（）()]+', '', str(text or '').lower())
+    return {text[i:i + 2] for i in range(len(text) - 1)} or {text}
+
+
+def similar(a, b, threshold=0.6):
+    """Overlap coefficient of character bigrams: '中文用微软雅黑' ~ '中文统一用微软雅黑，正文黑色'."""
+    x, y = _bigrams(a), _bigrams(b)
+    return bool(x and y) and len(x & y) / min(len(x), len(y)) >= threshold
 
 
 def _now():
@@ -158,7 +178,9 @@ class HabitLearner:
             'task': ('从用户对一份PPT提出的修改意见中，只找出用户明确表达的、脱离这份PPT的具体内容仍然成立、可以用到以后其他PPT上的设计偏好或审美观点'
                      '（例如图标风格、是否用人物照片、配图是否切题、字体、正文颜色、文字多少、留白、配色倾向、某类数据习惯用什么图）。'
                      '以下都不是偏好，不要输出：某一页元素的摆放位置或分区（左侧放什么、中间放什么）、某一页要加/删哪个元素或哪张图、'
-                     '某一页的连线和结构、某一页保留哪些具体内容、本次的页数/文稿/材料范围/是否联网、沿用本项目已确认的模板。'
+                     '某一页的连线和结构、某一页保留哪些具体内容、本次的页数/文稿/材料范围/是否联网、沿用本项目已确认的模板、'
+                     '关于内容真实性和来源的要求（不虚构、只用已核验内容、引用出处等，这些是系统规则）。'
+                     'action 为 update_brief / revise_draft 的文本常由助手整理，只有其中明确转述的用户审美偏好才算。'
                      '宁缺毋滥：拿不准就不输出；每条意见最多输出2条偏好。'
                      '每条偏好：slot_key 必须从 slot_keys 的键中选一个；rule 用一句简短、可复用的通用表述（不提页码和本次内容，不超过30字）；'
                      'polarity=do（要）或 avoid（不要）；quote 必须逐字摘自该条意见原文，取最能体现偏好的一小段；'
@@ -177,7 +199,8 @@ class HabitLearner:
                      'rule': '中文用微软雅黑，正文黑色，同级字号统一', 'polarity': 'do', 'quote': '微软雅黑，同级字号统一、正文黑色'}],
                 'not_preference': ['左侧现状，中间问题，右侧2027年规划', '左侧板块加入我上传的柱状图', '四个垃圾桶图标删掉',
                                    '只改第2页的连接关系，四个角之间不要连线', '严格按用户提供的15页逐页文稿制作',
-                                   '只用提纲原文，不引入联网检索', '沿用已确认模板与既有风格', '时间轴只保留五个年份']},
+                                   '只用提纲原文，不引入联网检索', '沿用已确认模板与既有风格', '时间轴只保留五个年份',
+                                   '不虚构未读到的表格内容', '只用已核验内容', '不引用图中未确认的数值']},
             'output_schema': {'items': [{'feedback_id': 'string', 'slot_key': 'string', 'rule': 'string',
                                          'polarity': 'do|avoid', 'quote': 'string',
                                          'same_as': 'string|null', 'purpose': 'research|commercial|null'}]},
@@ -225,6 +248,10 @@ class HabitLearner:
                 continue
             if not isinstance(quote, str) or not quote.strip() or _norm(quote) not in texts[fid]:
                 continue  # evidence must be the user's own words
+            if any(word in rule or word in quote for word in SYSTEM_RULE_WORDS):
+                continue  # content-truth / sourcing rules are platform rules, not taste
+            if len(_norm(quote)) < 4 or not any(word in quote for word in STANCE_WORDS):
+                continue  # the quote itself must state a stance
             same_as = item.get('same_as')
             purpose = item.get('purpose')
             # "以后都 / 每次 / 一律" must be the user's own words; the model's opinion is not enough
@@ -341,6 +368,15 @@ class HabitLearner:
                 if row is not None and row.status == 'revoked':
                     summary['skipped_revoked'] += 1
                     continue
+                if row is None:
+                    # The model may not link a request to a habit the user undid; never rely on that alone.
+                    undone = DesignHabit.query.filter_by(owner_id=owner_id, layer='personal', status='revoked',
+                                                         category=item['category'], slot=item['slot']).all()
+                    if any(similar(item['rule'], old.rule) or
+                           any(similar(item['quote'], e.get('quote')) for e in _load(old.evidence, []) if isinstance(e, dict))
+                           for old in undone):
+                        summary['skipped_revoked'] += 1
+                        continue
                 if row is None or row.status == 'dormant':
                     live = DesignHabit.query.filter(DesignHabit.owner_id == owner_id, DesignHabit.layer == 'personal',
                                                     DesignHabit.status.in_(['active', 'candidate'])).count()

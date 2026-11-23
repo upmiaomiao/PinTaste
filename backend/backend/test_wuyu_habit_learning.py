@@ -106,13 +106,24 @@ class ValidationTests(LearnerFixture):
 
     def test_model_generalize_flag_is_ignored_and_two_per_request(self):
         # Dry run 2026-11-23: "严格按用户提供的15页逐页文稿制作" came back with generalize=true.
-        row = self.feedback('严格按用户提供的15页逐页文稿制作，微软雅黑，正文黑色，不新增谢谢页，控制版式复杂度')
-        items = [dict(self.preference(row, '微软雅黑', slot='fonts', category='layout', rule='中文用微软雅黑'), generalize=True),
-                 dict(self.preference(row, '正文黑色', slot='fonts', category='layout', rule='正文用黑色'), generalize=True),
-                 dict(self.preference(row, '控制版式复杂度', slot='other', category='layout', rule='版式简洁'), generalize=True)]
+        row = self.feedback('严格按用户提供的15页逐页文稿制作，统一用微软雅黑，正文统一黑色，不新增谢谢页，控制版式保持简洁')
+        items = [dict(self.preference(row, '统一用微软雅黑', slot='fonts', category='layout', rule='中文用微软雅黑'), generalize=True),
+                 dict(self.preference(row, '正文统一黑色', slot='fonts', category='layout', rule='正文用黑色'), generalize=True),
+                 dict(self.preference(row, '控制版式保持简洁', slot='other', category='layout', rule='版式简洁'), generalize=True)]
         out = self.learner.validate({'items': items}, [row], [])
         self.assertEqual([i['rule'] for i in out], ['中文用微软雅黑', '正文用黑色'])
         self.assertFalse(any(i['generalize'] for i in out))
+
+    def test_content_truth_rules_and_stanceless_quotes_are_not_habits(self):
+        # Live 2026-11-23: assistant-written requirement wording became candidates.
+        rows = [self.feedback('使用任务书中的真实架构信息；不虚构未读到的表格内容，只用已核验内容'),
+                self.feedback('左侧加入我上传的“厨余分出率”柱状图，四个垃圾桶图标删掉')]
+        items = [self.preference(rows[0], '不虚构未读到的表格内容', slot='notes_policy', category='integration', rule='未读到的表格内容不作填充'),
+                 self.preference(rows[0], '只用已核验内容', slot='other', category='integration', rule='仅使用已核验内容'),
+                 self.preference(rows[1], '厨余分出率', slot='share_data_form', rule='分年度比率用柱状图呈现'),
+                 self.preference(rows[1], '四个垃圾桶图标删掉', slot='icon_style', rule='不用具象图标堆叠装饰')]
+        out = self.learner.validate({'items': items}, rows, [])
+        self.assertEqual([i['rule'] for i in out], ['不用具象图标堆叠装饰'])
 
     def test_slot_key_and_real_model_shapes(self):
         # Seen in the 2026-11-23 dry run: the label in "category" and the code in "slot".
@@ -189,6 +200,24 @@ class PromotionTests(LearnerFixture):
         self.assertEqual((result['skipped_revoked'], habit.status), (1, 'revoked'))
         self.assertEqual(len(self.habit_rows()), 1)
         self.assertEqual(self.habits.active_for('owner-a', {}), [])
+
+    def test_undo_holds_even_when_the_model_does_not_link_it(self):
+        # End-to-end test 2026-11-23: the model may simply not return same_as for an undone habit.
+        row = self.feedback('以后所有PPT都统一用微软雅黑，正文黑色')
+        self.learn_with([row], [self.preference(row, '以后所有PPT都统一用微软雅黑', slot='fonts', category='layout',
+                                                rule='中文统一用微软雅黑，正文黑色')])
+        habit = self.habit_rows()[0]
+        self.learner.respond('owner-a', [habit.id], 'undo')
+        again = self.feedback('以后也都用微软雅黑', project=self.project_b)
+        result, _ = self.learn_with([again], [self.preference(again, '以后也都用微软雅黑', slot='fonts', category='layout',
+                                                               rule='中文用微软雅黑')], project=self.project_b)
+        self.assertEqual(result['skipped_revoked'], 1)
+        self.assertEqual([h.status for h in self.habit_rows()], ['revoked'])
+        # A genuinely different preference in the same slot is still learned.
+        other = self.feedback('以后都用思源黑体', project=self.project_b)
+        self.learn_with([other], [self.preference(other, '以后都用思源黑体', slot='fonts', category='layout', rule='中文用思源黑体')],
+                        project=self.project_b)
+        self.assertEqual(sorted(h.status for h in self.habit_rows()), ['active', 'revoked'])
 
     def test_announced_once(self):
         row = self.feedback('以后每页都不超过三个要点')
