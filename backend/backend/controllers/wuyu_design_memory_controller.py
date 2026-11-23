@@ -112,6 +112,17 @@ def reset_habits():
     return habits(lambda service: service.reset(request.current_user.id))
 
 
+@wuyu_design_memory_bp.post('/habits/notices')
+@feature_required('work')
+def respond_habit_notice():
+    """op196: the conversation told the user about learned habits (announced), or the user undid them (undo)."""
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or set(payload) != {'habit_ids', 'action'}:
+        return error_response('INVALID_REQUEST', '请提供习惯编号与操作。', 400)
+    from services.wuyu_habit_learning import get_learner
+    return habits(lambda _: get_learner(current_app).respond(request.current_user.id, payload['habit_ids'], payload['action']))
+
+
 @wuyu_design_memory_bp.get('/habits/export')
 @wuyu_design_memory_bp.get('/habits/export/<cursor>')
 @feature_required('work')

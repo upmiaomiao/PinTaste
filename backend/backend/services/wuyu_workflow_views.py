@@ -164,7 +164,18 @@ class WorkflowViews:
                 'material_deletions': [{'material_id': ident, 'status': value['status']}
                     for ident, value in body.get('material_deletions', {}).items() if value['status'] == 'pending'],
                 'template_references': self.ports._template_references(project_id, body),
-                'history': body['history'][-200:], 'provider_status': self.ports.provider_status(), 'paused': body['paused']}
+                'history': body['history'][-200:], 'provider_status': self.ports.provider_status(), 'paused': body['paused'],
+                **self._design_habit_block(project_id, body['brief'])}
+
+    def _design_habit_block(self, project_id, brief):
+        """op196: learned-habit / applied-habit / deck-type notice for the conversation; never breaks a snapshot."""
+        try:
+            from services.wuyu_habit_learning import get_learner
+            block = get_learner(self.ports.app()).notice_for(project_id, brief)
+        except Exception as exc:
+            self.ports.app().logger.warning('Design habit notice skipped: type=%s', type(exc).__name__)
+            return {}
+        return {'design_habits': block} if block else {}
 
     def _job_dict(self, job, body=None):
         progress = json.loads(job.progress or '{}')

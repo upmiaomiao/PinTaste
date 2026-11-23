@@ -39,12 +39,15 @@ DEFAULTS = {'capture_enabled': True, 'personal_enabled': True, 'personal_auto_co
     'system_min_users': 3, 'system_min_feedback': 6, 'system_daily_points': 30,
     'max_feedback_per_run': 500, 'retrieval_limit': 8,
     # op195: administrator's recommended library templates per deck type, e.g. {"business_plan": ["figure75-001"]}.
-    'template_by_deck_type': {}}
+    'template_by_deck_type': {},
+    # op196: learn habits from the owner's revision requests (charged to the owner's points, within
+    # personal_daily_points) once a project has been quiet this many minutes with nothing running.
+    'habit_learning_enabled': True, 'habit_learning_idle_minutes': 20}
 MAX_TEMPLATES_PER_DECK_TYPE = 3
 BOUNDS = {'personal_min_feedback': (2, 1000), 'personal_min_projects': (2, 100),
     'personal_daily_points': (1, 100), 'interval_hours': (1, 720), 'system_min_users': (3, 1000),
     'system_min_feedback': (3, 10000), 'system_daily_points': (1, 1000),
-    'max_feedback_per_run': (10, 5000), 'retrieval_limit': (1, 12)}
+    'max_feedback_per_run': (10, 5000), 'retrieval_limit': (1, 12), 'habit_learning_idle_minutes': (5, 1440)}
 OPPOSITES = ('不要', '不用', '不需要', '取消', '去掉', '禁止', '减少')
 current_design_context = ContextVar('wuyu_design_context', default=None)
 
@@ -472,6 +475,13 @@ class DesignMemoryService:
     def tick(self):
         self.reconcile_interrupted()
         cfg = self.policy()['settings']
+        # op196: learn habits from quiet projects' revision requests (owner-paid, budgeted, idempotent).
+        try:
+            from .wuyu_habit_learning import get_learner
+            get_learner(self.app).tick(cfg)
+        except Exception as exc:
+            db.session.rollback()
+            self.app.logger.warning('DESIGN_HABIT_LEARNING_TICK_FAILED type=%s', type(exc).__name__)
         if cfg['system_enabled'] and cfg['system_periodic'] and cfg.get('scheduler_actor_id'):
             actor_id = cfg['scheduler_actor_id']
             from .wuyu_identity import authorize_paid

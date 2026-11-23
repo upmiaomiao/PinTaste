@@ -3,7 +3,7 @@ import React,{useState,useEffect,useRef} from 'react';
 import {Save,RefreshCw,Play,Check,RotateCcw} from 'lucide-react';
 import {api} from './api';
 
-const numbers={interval_hours:['自动凝练间隔（小时）',1,720],system_min_users:['每条系统规则最少用户数',3,1000],system_min_feedback:['每条系统规则最少有效反馈数',3,10000],system_daily_points:['系统每日凝练积分上限',1,1000],personal_min_feedback:['个人自动凝练最少新增反馈',2,1000],personal_min_projects:['个人规则最少已确认项目数',2,100],personal_daily_points:['每人每日凝练积分上限',1,100],max_feedback_per_run:['单次最大读取反馈数',10,5000],retrieval_limit:['每次最多引用设计规则数',1,12]};
+const numbers={interval_hours:['自动凝练间隔（小时）',1,720],system_min_users:['每条系统规则最少用户数',3,1000],system_min_feedback:['每条系统规则最少有效反馈数',3,10000],system_daily_points:['系统每日凝练积分上限',1,1000],personal_min_feedback:['个人自动凝练最少新增反馈',2,1000],personal_min_projects:['个人规则最少已确认项目数',2,100],personal_daily_points:['每人每日凝练积分上限',1,100],max_feedback_per_run:['单次最大读取反馈数',10,5000],retrieval_limit:['每次最多引用设计规则数',1,12],habit_learning_idle_minutes:['项目空闲多少分钟后整理修改意见',5,1440]};
 const names={candidate:'待审核',active:'使用中',superseded:'历史版本',disabled:'已停用',running:'凝练中',completed:'已完成',failed:'失败'};
 
 export default function DesignMemorySettings(){
@@ -24,6 +24,7 @@ export default function DesignMemorySettings(){
  <form onSubmit={e=>{e.preventDefault();perform(async()=>{receive(await api('/admin/work/design-memory',{method:'PUT',body:JSON.stringify({expected_revision:data.revision,settings})}));setNote("设置已保存。自动生成的系统规则仍须审核启用。");});}}>
  {toggle('capture_enabled',t("记录用户实际设计修改"))}{toggle('personal_enabled',t("生成时参考用户自己的设计记忆"))}{toggle('personal_auto_compile',t("积累足够已确认反馈后自动凝练个人设计规则"))}
  {toggle('system_enabled',t("启用经审核的系统设计规则"))}{toggle('system_periodic',t("定期调用 DeepSeek 凝练系统候选规则"))}
+ {toggle('habit_learning_enabled',t("从用户的修改意见中自动学习设计习惯（同一偏好出现在2个项目或用户说“以后都”才生效；扣用户积分）"))}
  <div className="admin-fields">{Object.entries(numbers).map(([key,[label,min,max]])=><label key={key}>{t(label)}<input type="number" required min={min} max={max} step="1" value={settings[key]} disabled={busy} onChange={e=>setSettings({...settings,[key]:Number(e.target.value)})}/></label>)}</div>
  <p className="admin-hint">{t("预算计入发起管理员或用户的现有积分，不额外扣 PPT 页数。失败或超时不自动重试；手动重试保留原请求，避免重复调用。当前任务要求优先于历史偏好。")}</p>
  {data.deck_types?.length?<><h3>{t("按PPT类型推荐模板")}</h3>

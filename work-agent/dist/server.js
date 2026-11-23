@@ -14,6 +14,7 @@ import { PRESET_STYLES } from "./preset_styles.js";
 import { registerWorkflowTools, safeError, presentWorkflow, conversationalWorkflow, workflowContent, researchPreparationOrderInstruction } from "./workflow-tools.js";
 import { registerAssetRoutes } from "./asset-http.js";
 import { registerPageLockTools } from "./page-lock-tools.js";
+import { registerDesignHabitTools } from "./design-habit-tools.js";
 import { registerMaterialUploadRoutes } from "./material-upload-http.js";
 import { resolveGenerationIntent } from "./generation-intent.js";
 const UI_URI = "ui://banana-slides/project-panel.html";
@@ -229,6 +230,7 @@ export function createBananaMcpServer(config, api = new BananaApiClient({
     const server = new McpServer({ name: "banana-slides", version: "0.1.0" }, { capabilities: { logging: {} } });
     registerWorkflowTools(server, api, config);
     registerPageLockTools(server, api, config);
+    registerDesignHabitTools(server, api);
     server.registerTool("create_presentation", {
         title: "Create Wuyu presentation project",
         description: researchPreparationOrderInstruction + "Create a durable Wuyu project using the user's actual request. deck makes 2–80 slides including a cover; pages makes exactly 1–8 content pages without a mandatory cover; asset makes one standalone diagram, illustration or icon. Preserve the explicit page count and output preference; model configuration is administrator-controlled. Creation only saves the brief. Follow conversation.required_action: confirm a real template before generate_images, review all actual images before native tracing. Do not generate disposable samples or fabricate approval. For an existing uploaded-material project, update its brief instead of creating a replacement or discarding materials. Gemini reads original material text, tables and verified images through analyze_materials and its evidence-checked draft. For incomplete reading, offer supplement/replace or explicitly consented partial continuation only when the current backend continuation_options allow it; preserve all unread-range warnings and never bypass quota, security or an invalid content plan by generating directly. Show actual output and named detail links.",
