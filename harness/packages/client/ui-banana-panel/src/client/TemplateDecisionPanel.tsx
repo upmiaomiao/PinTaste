@@ -22,6 +22,7 @@ const categoryLabels = {
   '摘要图': 'templateLibrary.categoryAbstract',
   '论文方法图': 'templateLibrary.categoryMethods',
 } as const
+const imageCategories = ['工艺流程图', '技术路线', '摘要图', '论文方法图'] as const
 
 /** Administrative review remains available only through its existing protected Settings link. */
 export function TemplateDecisionSurface(props:Props){
@@ -30,7 +31,7 @@ export function TemplateDecisionSurface(props:Props){
 
 function TemplateDecisionPanel({useStore,useTemplateLibrary,loadRecommendations,loadTemplateLibrary,inspectTemplate,loadTemplateMaterials,confirmTemplateChoice,uploadPrivateTemplate,t}:Props){
   const handle=useStore(state=>state.projectHandle),snapshot=useTemplateLibrary(state=>state)
-  const [tab,setTab]=useState<'recommended'|'all'|'upload'>('recommended'),[file,setFile]=useState<File|null>(null),[query,setQuery]=useState(''),[category,setCategory]=useState(''),[materialId,setMaterialId]=useState<string|null>(null),[large,setLarge]=useState<number|null>(null),[loaded,setLoaded]=useState<Set<string>>(()=>new Set())
+  const [tab,setTab]=useState<'recommended'|'all'|'upload'>('recommended'),[file,setFile]=useState<File|null>(null),[query,setQuery]=useState(''),[category,setCategory]=useState('整套PPT'),[materialId,setMaterialId]=useState<string|null>(null),[large,setLarge]=useState<number|null>(null),[loaded,setLoaded]=useState<Set<string>>(()=>new Set())
   const fileInput=useRef<HTMLInputElement>(null),dialog=useRef<HTMLDialogElement>(null)
   const scroll=useTemplateScroll<HTMLElement>(handle??'')
   const browser=useTemplateBrowser(snapshot,tab==='all',loadTemplateLibrary)
@@ -75,8 +76,11 @@ function TemplateDecisionPanel({useStore,useTemplateLibrary,loadRecommendations,
       <div className={css.options}>{snapshot.materials.map(item=><button type="button" key={item.id} disabled={!item.ready||snapshot.busy} className={css.option} aria-pressed={materialId===item.id} onClick={()=>setMaterialId(item.id)}><strong>{item.filename}</strong><span>{t(item.ready?'templateDecision.uploadReady':item.status==='failed'?'templateDecision.uploadFailed':'templateLibrary.parsing')}</span></button>)}</div>
     </div>:<>
       {tab==='all'?<div className={css.categories} role="group" aria-label={t('templateLibrary.template_category')}>
-        <button type="button" aria-pressed={!category} onClick={()=>selectCategory('')}>{t('templateLibrary.all')}</button>
-        {Object.entries(categoryLabels).filter(([value])=>snapshot.facets.template_category.includes(value)).map(([value,label])=><button type="button" key={value} aria-pressed={category===value} onClick={()=>selectCategory(value)}>{t(label)}</button>)}
+        <button type="button" aria-pressed={category==='整套PPT'} onClick={()=>selectCategory('整套PPT')}>{t('templateLibrary.groupPpt')}</button>
+        <button type="button" aria-pressed={category!=='整套PPT'} onClick={()=>{if(category==='整套PPT')selectCategory(imageCategories[0])}}>{t('templateLibrary.groupImage')}</button>
+      </div>:null}
+      {tab==='all'&&category!=='整套PPT'?<div className={css.categories} role="group" aria-label={t('templateLibrary.groupImage')}>
+        {imageCategories.filter(value=>snapshot.facets.template_category.includes(value)).map(value=><button type="button" key={value} aria-pressed={category===value} onClick={()=>selectCategory(value)}>{t(categoryLabels[value])}</button>)}
       </div>:null}
       {tab==='all'?<form className={css.search} onSubmit={event=>{event.preventDefault();loadAll()}}><input type="search" maxLength={200} aria-label={t('templateLibrary.search')} placeholder={t('templateLibrary.search')} value={query} onChange={event=>setQuery(event.target.value)}/><button type="submit">{t('templateDecision.search')}</button></form>:null}
       {(tab==='all'?snapshot.phase==='loading':snapshot.recommendationPhase==='loading')?<p role="status">{t('templateLibrary.loading')}</p>:null}

@@ -2389,6 +2389,8 @@ window.__ModuleLoader__.load({
 			"templateDecision.singleReviewFirst": "请查看这张参考图；确认不会启动生成。",
 			"templateLibrary.template_category": "模板分类",
 			"templateLibrary.categoryDeck": "整套PPT",
+			"templateLibrary.groupPpt": "PPT 模板",
+			"templateLibrary.groupImage": "图片模板",
 			"templateLibrary.categoryProcess": "工艺流程图",
 			"templateLibrary.categoryRoadmap": "技术路线",
 			"templateLibrary.categoryAbstract": "摘要图",
@@ -3060,6 +3062,8 @@ window.__ModuleLoader__.load({
 			"templateDecision.singleReviewFirst": "Inspect this reference image; confirming it does not start generation.",
 			"templateLibrary.template_category": "Template category",
 			"templateLibrary.categoryDeck": "Full decks",
+			"templateLibrary.groupPpt": "Presentation templates",
+			"templateLibrary.groupImage": "Image templates",
 			"templateLibrary.categoryProcess": "Process diagrams",
 			"templateLibrary.categoryRoadmap": "Technical roadmaps",
 			"templateLibrary.categoryAbstract": "Graphical abstracts",
@@ -8494,13 +8498,19 @@ window.__ModuleLoader__.load({
 			"摘要图": "templateLibrary.categoryAbstract",
 			"论文方法图": "templateLibrary.categoryMethods"
 		};
+		const imageCategories = [
+			"工艺流程图",
+			"技术路线",
+			"摘要图",
+			"论文方法图"
+		];
 		/** Administrative review remains available only through its existing protected Settings link. */
 		function TemplateDecisionSurface(props) {
 			return props.mode === "review" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(TemplateLibraryChooser, { ...props }) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(TemplateDecisionPanel, { ...props });
 		}
 		function TemplateDecisionPanel({ useStore, useTemplateLibrary, loadRecommendations, loadTemplateLibrary, inspectTemplate, loadTemplateMaterials, confirmTemplateChoice, uploadPrivateTemplate, t }) {
 			const handle = useStore((state) => state.projectHandle), snapshot = useTemplateLibrary((state) => state);
-			const [tab, setTab] = (0, react.useState)("recommended"), [file, setFile] = (0, react.useState)(null), [query, setQuery] = (0, react.useState)(""), [category, setCategory] = (0, react.useState)(""), [materialId, setMaterialId] = (0, react.useState)(null), [large, setLarge] = (0, react.useState)(null), [loaded, setLoaded] = (0, react.useState)(() => /* @__PURE__ */ new Set());
+			const [tab, setTab] = (0, react.useState)("recommended"), [file, setFile] = (0, react.useState)(null), [query, setQuery] = (0, react.useState)(""), [category, setCategory] = (0, react.useState)("整套PPT"), [materialId, setMaterialId] = (0, react.useState)(null), [large, setLarge] = (0, react.useState)(null), [loaded, setLoaded] = (0, react.useState)(() => /* @__PURE__ */ new Set());
 			const fileInput = (0, react.useRef)(null), dialog = (0, react.useRef)(null);
 			const scroll = useTemplateScroll(handle ?? "");
 			const browser = useTemplateBrowser(snapshot, tab === "all", loadTemplateLibrary);
@@ -8682,15 +8692,28 @@ window.__ModuleLoader__.load({
 							"aria-label": t("templateLibrary.template_category"),
 							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 								type: "button",
-								"aria-pressed": !category,
-								onClick: () => selectCategory(""),
-								children: t("templateLibrary.all")
-							}), Object.entries(categoryLabels).filter(([value]) => snapshot.facets.template_category.includes(value)).map(([value, label]) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+								"aria-pressed": category === "整套PPT",
+								onClick: () => selectCategory("整套PPT"),
+								children: t("templateLibrary.groupPpt")
+							}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+								type: "button",
+								"aria-pressed": category !== "整套PPT",
+								onClick: () => {
+									if (category === "整套PPT") selectCategory(imageCategories[0]);
+								},
+								children: t("templateLibrary.groupImage")
+							})]
+						}) : null,
+						tab === "all" && category !== "整套PPT" ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+							className: TemplateDecisionPanel_module_css_default.categories,
+							role: "group",
+							"aria-label": t("templateLibrary.groupImage"),
+							children: imageCategories.filter((value) => snapshot.facets.template_category.includes(value)).map((value) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 								type: "button",
 								"aria-pressed": category === value,
 								onClick: () => selectCategory(value),
-								children: t(label)
-							}, value))]
+								children: t(categoryLabels[value])
+							}, value))
 						}) : null,
 						tab === "all" ? /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("form", {
 							className: TemplateDecisionPanel_module_css_default.search,
