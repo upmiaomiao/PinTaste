@@ -14,6 +14,9 @@ export default function DesignMemorySettings(){
  useEffect(()=>{let live=true;api('/admin/work/design-memory').then(value=>{if(live)receive(value);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[]);
  async function perform(action){setBusy(true);setError('');setNote('');try{await action();}catch(e){setError(e.message);}finally{setBusy(false);}}
  const toggle=(key,label)=><label className="admin-switch"><input type="checkbox" checked={settings[key]} disabled={busy} onChange={e=>setSettings({...settings,[key]:e.target.checked})}/>{t(label)}</label>;
+ // op195: up to three library templates recommended per deck type; empty slots are dropped on save.
+ const mapping=(settings&&settings.template_by_deck_type)||{};
+ const setSlot=(type,index,value)=>{const list=[...(mapping[type]||[])];list[index]=value;const clean=list.filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i);const next={...mapping};if(clean.length)next[type]=clean;else delete next[type];setSettings({...settings,template_by_deck_type:next});};
  return <section className="admin-panel"><div className="admin-panel-title"><h2>{t("设计记忆与规则")}</h2><button className="secondary" disabled={busy} onClick={()=>perform(load)}><RefreshCw size={16}/>{t("刷新")}</button></div>
  {error?<p role="alert" className="form-error">{t(error)}</p>:null}{note?<p role="status" className="form-note">{t(note)}</p>:null}
  {!data||!settings?<p>{t("正在读取…")}</p>:<>
@@ -23,6 +26,9 @@ export default function DesignMemorySettings(){
  {toggle('system_enabled',t("启用经审核的系统设计规则"))}{toggle('system_periodic',t("定期调用 DeepSeek 凝练系统候选规则"))}
  <div className="admin-fields">{Object.entries(numbers).map(([key,[label,min,max]])=><label key={key}>{t(label)}<input type="number" required min={min} max={max} step="1" value={settings[key]} disabled={busy} onChange={e=>setSettings({...settings,[key]:Number(e.target.value)})}/></label>)}</div>
  <p className="admin-hint">{t("预算计入发起管理员或用户的现有积分，不额外扣 PPT 页数。失败或超时不自动重试；手动重试保留原请求，避免重复调用。当前任务要求优先于历史偏好。")}</p>
+ {data.deck_types?.length?<><h3>{t("按PPT类型推荐模板")}</h3>
+ <p className="admin-hint">{t("为每类PPT指定最多3个模板库模板。用户选模板时排在其个人同类历史之后、自己上传的模板之前，并显示“推荐用于该类PPT”。不指定则按原有方式推荐。")}</p>
+ <div className="table-wrap"><table><thead><tr><th>{t("PPT类型")}</th><th>{t("推荐模板（按顺序）")}</th></tr></thead><tbody>{data.deck_types.map(type=><tr key={type.value}><td>{t(type.label)}</td><td>{[0,1,2].map(index=>{const list=mapping[type.value]||[];return <select key={index} aria-label={t(type.label)+' '+(index+1)} value={list[index]||''} disabled={busy||index>list.length} onChange={e=>setSlot(type.value,index,e.target.value)}><option value="">{t("不指定")}</option>{(data.template_options||[]).map(option=><option key={option.id} value={option.id}>{option.title}</option>)}</select>;})}</td></tr>)}</tbody></table></div></>:null}
  <button className="primary" disabled={busy}><Save size={16}/>{t("保存设置")}</button></form>
  <h3>{t("本次可凝练的匿名信号")}</h3><p className="admin-hint">{t("已确认反馈")} {data.preview?.supported_feedback??0} {t("条，覆盖")} {data.preview?.supported_projects??0} {t("个项目。仅展示达到多人支持门槛的规则。")}</p>
  <div className="table-wrap"><table><thead><tr><th>{t("设计规则")}</th><th>{t("有效反馈")}</th><th>{t("用户数")}</th><th>{t("项目数")}</th></tr></thead><tbody>{(data.preview?.eligible_rules||[]).map(rule=><tr key={rule.id}><td>{rule.rule}</td><td>{rule.feedback_count}</td><td>{rule.user_count}</td><td>{rule.project_count}</td></tr>)}</tbody></table></div>

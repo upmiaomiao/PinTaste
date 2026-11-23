@@ -30,12 +30,20 @@ class ActionStateDependencies:
 def _update_brief(body, payload, project_id, deps):
     allowed = {'conversation_config_revision', 'task_mode', 'scenario', 'subscenario', 'audience', 'page_count', 'style', 'topic', 'goal',
                'requirements', 'review_policy', 'duration', 'language', 'aspect_ratio', 'template_id', 'preserve_outline',
-               'creation_kind', 'output_preference', 'image_profile', 'asset_kind', 'feedback', 'design_notes', 'diagram_preset'}
+               'creation_kind', 'output_preference', 'image_profile', 'asset_kind', 'feedback', 'design_notes', 'diagram_preset',
+               'deck_type'}
     if set(payload) - allowed:
         raise deps.error_type('Unknown brief field')
     if 'conversation_config_revision' in payload and (type(payload['conversation_config_revision']) is not int or payload['conversation_config_revision'] < 0):
         raise deps.error_type('conversation_config_revision must be a nonnegative integer')
-    brief = body['brief'] | {k: v for k, v in payload.items() if k not in {'review_policy', 'preserve_outline', 'feedback'}}
+    brief = body['brief'] | {k: v for k, v in payload.items() if k not in {'review_policy', 'preserve_outline', 'feedback', 'deck_type'}}
+    # op195: what the deck is for (template preference key). Stated values win; otherwise it is
+    # re-inferred from the brief's own words. It is metadata: on its own it never resets the draft.
+    from services.wuyu_deck_types import apply_to_brief
+    try:
+        apply_to_brief(brief, payload)
+    except ValueError as error:
+        raise deps.error_type(str(error)) from None
     from services.wuyu_generation import creation_options
     try:
         generation = creation_options(brief)
@@ -50,7 +58,8 @@ def _update_brief(body, payload, project_id, deps):
         policy = 'template_only'
     if policy not in {'guided', 'template_only', 'template_and_final'}:
         raise deps.error_type('Invalid review policy')
-    changed = {key for key in brief if brief[key] != body['brief'].get(key)} - {'conversation_config_revision'}
+    changed = ({key for key in set(brief) | set(body['brief']) if brief.get(key) != body['brief'].get(key)}
+               - {'conversation_config_revision', 'deck_type', 'deck_type_source'})
     if not changed:
         body['brief'] = brief
         if policy != body['workflow']['review_policy']:

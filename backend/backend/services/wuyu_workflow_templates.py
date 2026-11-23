@@ -126,6 +126,11 @@ class TemplateConfiguration:
         academic = ['user_library-478d24a90895d946', 'user_library-8a1aa7dd468c5d68',
                     'user_library-78549ac0c9996386', 'user_library-05366c65ec9cd6ba']
         subscenario = str(body['brief'].get('subscenario', '')).lower()
+        # op195: an academic deck type (stated or inferred) selects the academic family directly.
+        from services.wuyu_deck_types import effective_deck_type, ACADEMIC_CODES
+        deck_type = effective_deck_type(body['brief'])
+        if deck_type in ACADEMIC_CODES:
+            subscenario = deck_type
         academic_scenarios = {'thesis_defense', 'master_defense', 'doctoral_defense', 'proposal_defense',
                               'academic_report', 'qualifying_exam', 'degree', 'paper', 'paper_report', 'academic'}
         goal = str(body['brief'].get('goal', '')).lower()

@@ -132,6 +132,10 @@ class UploadedTemplates:
                 'tag_source': 'private_upload', **({'pages': pages} if detail else {})}
 
     def list(self, owner_id, detail=False):
+        return [card for _, card in self.keyed(owner_id, detail)]
+
+    def keyed(self, owner_id, detail=False):
+        """(template key, card) pairs; the key is the identity template_key() records (op195)."""
         cards, seen = [], set()
         for row in self._rows(owner_id):
             material = row[2]
@@ -142,7 +146,7 @@ class UploadedTemplates:
             except TemplateLibraryError:
                 continue
             seen.add(material['sha256'])
-            cards.append(self._card(material, detail))
+            cards.append(('upload:' + material['sha256'], self._card(material, detail)))
         return cards
 
     def detail(self, owner_id, ident):

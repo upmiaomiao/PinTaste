@@ -1,6 +1,7 @@
 runtime/
-dist/
 output/
 __pycache__/
 .pytest_cache/
 .env
+# dist/ is versioned on purpose: the staging site serves these exact build outputs, and older
+# hashed bundles must stay available for pages opened before a release (see README "构建").

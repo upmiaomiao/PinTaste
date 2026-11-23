@@ -17,6 +17,43 @@ def choice_signature(body):
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
+def template_key(body, choice):
+    """A template's identity across projects (op195), or None.
+
+    Uploaded templates are the same template wherever they are reused (the account list
+    de-duplicates them by file SHA-256); personal saved designs keep their own ID; library
+    templates keep their catalogue source ID.
+    """
+    if not isinstance(choice, dict) or not isinstance(choice.get('source_id'), str):
+        return None
+    if choice.get('source_kind') == 'library':
+        return 'library:' + choice['source_id']
+    if choice.get('source_kind') != 'upload' or not choice['source_id'].startswith('material:'):
+        return None
+    material = next((m for m in body.get('materials', []) if m.get('id') == choice['source_id'][len('material:'):]), None)
+    if not isinstance(material, dict):
+        return None
+    if isinstance(material.get('personal_template_id'), str):
+        return 'personal:' + material['personal_template_id']
+    sha = material.get('sha256')
+    return 'upload:' + sha if isinstance(sha, str) and len(sha) == 64 else None
+
+
+def record_template_choice(app, owner_id, body, request_key=None):
+    """Keep a confirmed choice as a design event keyed by deck type. Never blocks the choice."""
+    from .wuyu_deck_types import effective_deck_type
+    habits = app.extensions.get('wuyu_design_habits')
+    choice = body.get('template_choice')
+    key = template_key(body, choice)
+    if not habits or not owner_id or not key:
+        return None
+    deck_type = effective_deck_type(body.get('brief'))
+    return habits.record_event(owner_id, body['workflow']['project_id'], 'template_choice',
+        {'template_key': key, 'source_kind': choice.get('source_kind'), 'title': str(choice.get('title') or '')[:200],
+         'deck_type': deck_type},
+        context={'deck_type': deck_type}, request_key=request_key, commit=False)
+
+
 def current_template_choice(body):
     choice = body.get('template_choice')
     # Historical local choices were consent to synthesized neutral layouts,
@@ -127,6 +164,16 @@ class TemplateReviewMixin:
                                    'preview_kind': source.get('preview_kind') if kind == 'library' else 'private_uploaded_template',
                                    'preview_count': count, 'reference_scope': source.get('reference_scope') if kind == 'library' else 'single_image', 'confirmed_at': _now(),
                                    'signature': choice_signature(body)}
+        try:
+            from models import db, Project
+            from sqlalchemy.exc import SQLAlchemyError
+            owner = db.session.get(Project, body['workflow']['project_id'])
+            record_template_choice(self.app, owner.user_id if owner else None, body,
+                request_key='template:%s:%s' % (body['workflow']['project_id'], body['template_choice']['signature']))
+        except SQLAlchemyError:
+            raise  # the workflow's own transaction handling must see a database error
+        except Exception as exc:
+            self.app.logger.warning('Template choice capture skipped: type=%s', type(exc).__name__)
         self._restore_template_choice(body)
         body['epoch'] += 1
 

@@ -37,7 +37,10 @@ DEFAULTS = {'capture_enabled': True, 'personal_enabled': True, 'personal_auto_co
     'personal_min_feedback': 6, 'personal_min_projects': 2, 'personal_daily_points': 12,
     'system_enabled': False, 'system_periodic': False, 'interval_hours': 168,
     'system_min_users': 3, 'system_min_feedback': 6, 'system_daily_points': 30,
-    'max_feedback_per_run': 500, 'retrieval_limit': 8}
+    'max_feedback_per_run': 500, 'retrieval_limit': 8,
+    # op195: administrator's recommended library templates per deck type, e.g. {"business_plan": ["figure75-001"]}.
+    'template_by_deck_type': {}}
+MAX_TEMPLATES_PER_DECK_TYPE = 3
 BOUNDS = {'personal_min_feedback': (2, 1000), 'personal_min_projects': (2, 100),
     'personal_daily_points': (1, 100), 'interval_hours': (1, 720), 'system_min_users': (3, 1000),
     'system_min_feedback': (3, 10000), 'system_daily_points': (1, 1000),
@@ -120,6 +123,31 @@ class DesignMemoryService:
         return {'revision': row.revision if row else 0,
                 'settings': deepcopy(DEFAULTS) | (json.loads(row.body) if row else {})}
 
+    def _library(self):
+        """The template library service; registered on first use, like the template library controller does."""
+        library = self.app.extensions.get('wuyu_template_library')
+        if library is None:
+            from .wuyu_template_library import get_template_library
+            library = get_template_library(self.app)
+        return library
+
+    def _template_mapping(self, value):
+        """Deck type -> up to three approved whole-deck library templates; anything else is refused."""
+        from .wuyu_deck_types import CODES
+        if not isinstance(value, dict) or not set(value) <= set(CODES):
+            raise DesignMemoryError('模板配置的PPT类型无效。')
+        allowed = {item['id'] for item in self._library().global_options()}
+        clean = {}
+        for deck_type, ids in value.items():
+            if (not isinstance(ids, list) or len(ids) > MAX_TEMPLATES_PER_DECK_TYPE
+                    or any(not isinstance(i, str) for i in ids) or len(set(ids)) != len(ids)):
+                raise DesignMemoryError('每种PPT类型最多推荐%d个不重复的模板。' % MAX_TEMPLATES_PER_DECK_TYPE)
+            if set(ids) - allowed:
+                raise DesignMemoryError('只能选择已审核的整套模板库模板。')
+            if ids:
+                clean[deck_type] = ids
+        return clean
+
     def save_policy(self, actor_id, payload):
         if not isinstance(payload, dict) or set(payload) != {'expected_revision', 'settings'}:
             raise DesignMemoryError('请提交当前配置版本与完整设置。')
@@ -128,6 +156,9 @@ class DesignMemoryService:
             raise DesignMemoryError('设计记忆配置字段不完整。')
         for key, default in DEFAULTS.items():
             value = patch[key]
+            if key == 'template_by_deck_type':
+                patch[key] = self._template_mapping(value)
+                continue
             if type(default) is bool and type(value) is not bool or type(default) is int and (type(value) is not int or not BOUNDS[key][0] <= value <= BOUNDS[key][1]):
                 raise DesignMemoryError('配置类型或范围无效。')
         revision = payload['expected_revision']
@@ -427,8 +458,16 @@ class DesignMemoryService:
         policy['settings'].pop('scheduler_actor_id', None)
         sets = DesignRuleSet.query.filter_by(scope='system').order_by(DesignRuleSet.created_at.desc()).limit(30).all()
         runs = DesignCompileRun.query.filter_by(scope='system').order_by(DesignCompileRun.created_at.desc()).limit(30).all()
+        from .wuyu_deck_types import DECK_TYPES
+        try:
+            options = self._library().global_options()
+        except Exception as exc:  # the settings page must still open if the library store is unavailable
+            self.app.logger.warning('Template options unavailable: type=%s', type(exc).__name__)
+            options = []
         return policy | {'rule_sets': [{'id': row.id, 'status': row.status, 'created_at': row.created_at.isoformat()+'Z', 'rules': json.loads(row.body)['rules']} for row in sets],
-                         'runs': [self._run_view(row) for row in runs], 'preview': self.preview()}
+                         'runs': [self._run_view(row) for row in runs], 'preview': self.preview(),
+                         'deck_types': [{'value': code, 'label': label} for code, label, _, _ in DECK_TYPES],
+                         'template_options': options}
 
     def tick(self):
         self.reconcile_interrupted()

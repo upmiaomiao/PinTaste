@@ -924,22 +924,121 @@ class TemplateLibrary:
             return self._card(record, detail=True, review=record.get('owner_user_id') == actor.id or _can_review(actor))
 
     def recommend(self, actor, brief):
-        """Rank approved designs by the actual task, retaining at least four real preview pages."""
+        """Rank approved designs by the actual task, retaining at least four real preview pages.
+
+        op195: the deck type (stated or inferred) drives the task match, and the owner's own
+        earlier choices for the same type come first with a plain reason.
+        """
         self.prepare()
         from .wuyu_template_recommendations import rank_templates
+        from .wuyu_deck_types import effective_deck_type, label, ACADEMIC_CODES
+        deck_type = effective_deck_type(brief)
+        deck_label = label(deck_type)
+        ranking_brief = dict(brief)
+        if deck_type:
+            ranking_brief['goal'] = deck_label + ' ' + str(brief.get('goal') or '')
+            if deck_type in ACADEMIC_CODES:
+                ranking_brief['subscenario'] = deck_type
         with self._state() as state:
             single = brief.get('creation_kind') == 'asset' or brief.get('creation_kind') == 'pages' and brief.get('page_count') == 1
             records = [record for record in state['sources'].values()
                        if record.get('review_status') == 'approved'
                        and (record.get('reference_scope') == 'single_image' and single
                             or record.get('reference_sufficient') is True and sum(bool(page.get('selected')) for page in record['pages']) >= 4)]
-            ranked = rank_templates(records, brief)
+            ranked = rank_templates(records, ranking_brief)
             personal = self.app.extensions.get('wuyu_personal_templates') if hasattr(self, 'app') else None
             from .wuyu_uploaded_templates import UploadedTemplates
-            personal_cards = (UploadedTemplates(self.app).list(actor.id, detail=True) + (personal.list(actor.id) if personal else []))[:2]
-            return {'items': personal_cards + [dict(self._card(record, detail=True), recommendation_reason=reason)
-                              for record, reason in ranked[:4-len(personal_cards)]],
+            own = UploadedTemplates(self.app).keyed(actor.id, detail=True) + [
+                (card['id'], card) for card in (personal.list(actor.id) if personal else [])]
+            library = {'library:' + str(record['id']): record for record in records}
+            history = self._choice_history(actor.id, deck_type)
+            items, used = [], set()
+            # 1. What this person chose before for the same type of deck, most used first.
+            for key, count in history:
+                card = next((c for k, c in own if k == key), None)
+                if card is None and key in library:
+                    card = self._card(library[key], detail=True)
+                if card is None or card['id'] in used:
+                    continue
+                if deck_label:
+                    reason = ('你做%s常用的模板（已用%d次）' % (deck_label, count) if count >= 2
+                              else '你上次做%s时用的模板' % deck_label)
+                else:
+                    reason = '你最近用过的模板'
+                items.append(dict(card, recommendation_reason=reason))
+                used.add(card['id'])
+                if len(items) >= 2:
+                    break
+            # 2. The administrator's recommendation for this deck type (at most two cards).
+            mapping = {}
+            memory = self.app.extensions.get('wuyu_design_memory') if hasattr(self, 'app') else None
+            if memory and deck_type:
+                mapping = memory.policy()['settings'].get('template_by_deck_type') or {}
+            admin_added = 0
+            for source_id in mapping.get(deck_type, []) if deck_type else []:
+                record = library.get('library:' + str(source_id))
+                if record is None or admin_added >= 2 or len(items) >= 4:
+                    continue
+                card = self._card(record, detail=True)
+                if card['id'] in used:
+                    continue
+                items.append(dict(card, recommendation_reason='推荐用于%s的模板' % deck_label))
+                used.add(card['id'])
+                admin_added += 1
+            # 3. The person's own uploads and saved designs, as before (at most two personal cards).
+            for _, card in own:
+                if len(items) >= 4 or sum(1 for item in items if str(item['id']).startswith(('uploaded:', 'personal:'))) >= 2:
+                    break
+                if card['id'] not in used:
+                    items.append(dict(card, recommendation_reason='你自己的模板'))
+                    used.add(card['id'])
+            # 4. Library templates ranked for this task.
+            for record, reason in ranked:
+                if len(items) >= 4:
+                    break
+                card = self._card(record, detail=True)
+                if card['id'] in used:
+                    continue
+                items.append(dict(card, recommendation_reason=('适合%s；' % deck_label + reason)
+                                  if deck_label and deck_label not in reason else reason))
+                used.add(card['id'])
+            return {'items': items[:4], 'deck_type': deck_type, 'deck_type_label': deck_label,
                     'total': len(records), 'minimum_preview_count': 1 if single else 5, 'minimum_body_reference_count': 1 if single else 5, 'facets': VOCABULARY}
+
+    def global_options(self):
+        """Approved whole-deck library templates an administrator may recommend for a deck type (op195)."""
+        self.prepare()
+        with self._state() as state:
+            rows = [{'id': str(record['id']), 'title': str(record.get('title') or record['id'])[:200]}
+                    for record in state['sources'].values()
+                    if record.get('review_status') == 'approved' and record.get('reference_scope') != 'single_image'
+                    and record.get('reference_sufficient') is True
+                    and sum(bool(page.get('selected')) for page in record['pages']) >= 4]
+        return sorted(rows, key=lambda row: (row['title'], row['id']))
+
+    def _choice_history(self, owner_id, deck_type, limit=200):
+        """[(template key, count)] of the owner's confirmed choices for this deck type, most used, then latest.
+
+        Empty when design habits are paused or unavailable. Without a known type, all recent choices count.
+        """
+        habits = self.app.extensions.get('wuyu_design_habits') if hasattr(self, 'app') else None
+        if not habits or not habits.available or habits.paused(owner_id):
+            return []
+        from models.wuyu_design_habits import DesignEvent
+        counts, latest = {}, {}
+        rows = (DesignEvent.query.filter_by(owner_id=owner_id, kind='template_choice')
+                .order_by(DesignEvent.created_at.desc()).limit(limit).all())
+        for order, row in enumerate(rows):
+            try:
+                payload = json.loads(row.payload)
+            except ValueError:
+                continue
+            key = payload.get('template_key') if isinstance(payload, dict) else None
+            if not isinstance(key, str) or deck_type and payload.get('deck_type') != deck_type:
+                continue
+            counts[key] = counts.get(key, 0) + 1
+            latest.setdefault(key, order)
+        return sorted(counts.items(), key=lambda item: (-item[1], latest[item[0]]))
 
     def preview_path(self, ident, number, actor):
         if type(number) is not int or number < 1:
