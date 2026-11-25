@@ -99,12 +99,14 @@ export class TemplateLibraryHttpClient {
     return parseCard(await this.call('/' + encodeURIComponent(id)), this.previewUrl)
   }
   /** Read only task-matched, approved templates with at least four existing preview pages. */
-  async recommend(projectId: string): Promise<NeutralTemplateCard[]> {
+  async recommend(projectId: string): Promise<NeutralTemplateCard[] & {firstTemplate?: boolean}> {
     if (!identifier(projectId)) throw new TemplateRequestError(400)
     const raw = await this.call('/recommendations?project_id=' + encodeURIComponent(projectId))
     if (!object(raw) || !Array.isArray(raw.items) || raw.items.length > 4) throw new TemplateRequestError(502)
-    const cards = raw.items.map(item => parseCard(item, this.previewUrl))
+    const cards: NeutralTemplateCard[] & {firstTemplate?: boolean} = raw.items.map(item => parseCard(item, this.previewUrl))
     if (cards.some(card => card.review_status !== 'approved' || (card.pages?.length ?? 0) < (card.reference_scope==='single_image'||['private_generated_design','private_uploaded_template'].includes(card.preview_kind)?1:4))) throw new TemplateRequestError(502)
+    // op200: true while this person has never confirmed a template; the 推荐 tab is then hidden.
+    cards.firstTemplate = raw.first_template === true
     return cards
   }
   /** Persist the explicit current template choice; no image-generation action is included. */
@@ -164,7 +166,7 @@ export interface TemplateLibrarySnapshot {
   phase: 'idle' | 'loading' | 'ready' | 'error'; items: NeutralTemplateCard[]; total: number; facets: TemplateTags
   filters: TemplateFilters; selected: NeutralTemplateCard | null; detail: NeutralTemplateCard | null
   tab: 'library' | 'mine' | 'review'; admin: boolean; busy: boolean; actionError: boolean; projectId: string | null; materials: TemplateMaterial[]
-  recommendationPhase:'idle'|'loading'|'ready'|'error'; recommended:NeutralTemplateCard[]
+  recommendationPhase:'idle'|'loading'|'ready'|'error'; recommended:NeutralTemplateCard[]; firstTemplate?:boolean
   confirmedChoice:{id:string;title:string;kind:'library'|'upload'}|null; maxTemplateBytes:number
   templateLimitsStatus:'idle'|'loading'|'ready'|'error';actionFailure:TemplateActionFailure|null
 }
@@ -192,7 +194,7 @@ export class TemplateLibraryController {
   private readonly uploadKeys = new WeakMap<File, string>()
   /** @param dependencies - Verified API/identity access and Session-specific persistence. */
   constructor(private readonly dependencies: TemplateLibraryDependencies) {
-    this.state = createSnapshotStore<TemplateLibrarySnapshot>({ phase: 'idle', items: [], total: 0, facets: emptyTags(), filters: {}, selected: null, detail: null, tab: 'library', admin: false, busy: false, actionError: false, projectId: null, materials: [], recommendationPhase:'idle',recommended:[],confirmedChoice:null,maxTemplateBytes:0,templateLimitsStatus:'idle',actionFailure:null })
+    this.state = createSnapshotStore<TemplateLibrarySnapshot>({ phase: 'idle', items: [], total: 0, facets: emptyTags(), filters: {}, selected: null, detail: null, tab: 'library', admin: false, busy: false, actionError: false, projectId: null, materials: [], recommendationPhase:'idle',recommended:[],firstTemplate:false,confirmedChoice:null,maxTemplateBytes:0,templateLimitsStatus:'idle',actionFailure:null })
   }
   /** Revalidate a saved ID once, without loading the whole library or any model. */
   hydrateOnce(): Promise<void> {
@@ -271,7 +273,7 @@ export class TemplateLibraryController {
       const id=this.state.getSnapshot().projectId
       if(!id)throw new TemplateRequestError(400)
       const cards=await this.dependencies.api.recommend(id)
-      if(!this.disposed&&version===this.recommendationVersion)this.state.update(s=>{s.recommended=cards;s.recommendationPhase='ready';s.detail=cards.find(card=>card.id===s.selected?.id)??cards[0]??null})
+      if(!this.disposed&&version===this.recommendationVersion)this.state.update(s=>{s.recommended=cards;s.firstTemplate=cards.firstTemplate===true;s.recommendationPhase='ready';s.detail=cards.find(card=>card.id===s.selected?.id)??cards[0]??null})
     }catch{if(!this.disposed&&version===this.recommendationVersion)this.state.update(s=>{s.recommendationPhase='error'})}
   }
   /** Validate and store the actual choice without sending a prompt or calling an image model. */

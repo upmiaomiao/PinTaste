@@ -173,7 +173,7 @@ def _record(ident):
 class RecommendOrderTests(unittest.TestCase):
     """Personal same-type history, then the administrator's type mapping, then own templates, then library."""
 
-    def recommend(self, brief, history=(), mapping=None, own=()):
+    def recommend(self, brief, history=(), mapping=None, own=(), has_history=True):
         from contextlib import contextmanager
         records = {ident: _record(ident) for ident in ('L1', 'L2', 'L3', 'L4', 'L5')}
 
@@ -184,7 +184,8 @@ class RecommendOrderTests(unittest.TestCase):
         stub = types.SimpleNamespace(
             app=types.SimpleNamespace(extensions={'wuyu_design_memory': memory}, config={'UPLOAD_FOLDER': '/tmp'}),
             prepare=lambda: None, _state=state, _card=lambda record, detail=False: {'id': record['id']},
-            _choice_history=lambda owner, deck_type: list(history))
+            _choice_history=lambda owner, deck_type: list(history),
+            _has_template_history=lambda owner: has_history)
         with patch('services.wuyu_uploaded_templates.UploadedTemplates.keyed', return_value=list(own)):
             return TemplateLibrary.recommend(stub, types.SimpleNamespace(id='u1'), brief)
 
@@ -215,6 +216,60 @@ class RecommendOrderTests(unittest.TestCase):
         self.assertIsNone(result['deck_type'])
         self.assertEqual(result['items'][0], {'id': 'L5', 'recommendation_reason': '你最近用过的模板'})
         self.assertNotIn('推荐用于', ''.join(i['recommendation_reason'] for i in result['items']))
+
+
+    def test_first_template_flag(self):
+        self.assertFalse(self.recommend({'topic': '年终总结'})['first_template'])
+        self.assertTrue(self.recommend({'topic': '年终总结'}, has_history=False)['first_template'])
+
+
+class FirstTemplateTests(habit_fixture.HabitFixture):
+    """op200: whether the owner has ever confirmed a template decides if 推荐 is shown first."""
+    choose = ChoiceHistoryTests.choose
+
+    def has(self, owner='owner-a'):
+        return TemplateLibrary._has_template_history(types.SimpleNamespace(app=self.app), owner)
+
+    def workflow(self, choice, owner='owner-a'):
+        from models import Project
+        from models.wuyu_workflow import WuyuWorkflow
+        import uuid
+        project = str(uuid.uuid4())
+        db.session.add(Project(id=project, user_id=owner, idea_prompt='fixture'))
+        db.session.add(WuyuWorkflow(project_id=project, revision=1,
+                                    body=json.dumps({'workflow': {'project_id': project}, 'template_choice': choice})))
+        db.session.commit()
+
+    def test_new_owner_then_after_a_choice(self):
+        self.assertFalse(self.has())
+        self.choose('a' * 64, 'grant')
+        self.assertTrue(self.has())
+        self.assertFalse(self.has('owner-b'))
+
+    def test_paused_owner_falls_back_to_own_workflows(self):
+        self.habits.set_paused('owner-a', True)
+        self.workflow(None)                      # key present but no choice (e.g. reset after material change)
+        self.assertFalse(self.has())
+        self.workflow({'source_kind': 'library', 'source_id': 'L1', 'title': 't'}, owner='owner-b')
+        self.assertFalse(self.has())             # someone else's project does not count
+        self.workflow({'source_kind': 'library', 'source_id': 'L1', 'title': 't'})
+        self.assertTrue(self.has())
+
+    def test_events_count_even_while_paused(self):
+        self.choose('b' * 64, 'grant')
+        self.habits.set_paused('owner-a', True)
+        self.assertTrue(self.has())
+
+    def test_unavailable_habits_use_workflows_and_errors_keep_todays_view(self):
+        app = types.SimpleNamespace(extensions={})
+        self.assertFalse(TemplateLibrary._has_template_history(types.SimpleNamespace(app=app), 'owner-a'))
+        self.workflow({'source_kind': 'upload', 'source_id': 'material:m', 'title': 't'})
+        self.assertTrue(TemplateLibrary._has_template_history(types.SimpleNamespace(app=app), 'owner-a'))
+        broken = types.SimpleNamespace(available=True, paused=lambda owner: (_ for _ in ()).throw(RuntimeError()))
+        with patch('models.wuyu_design_habits.DesignEvent.query') as query:
+            query.filter_by.return_value.first.return_value = None
+            app = types.SimpleNamespace(extensions={'wuyu_design_habits': broken})
+            self.assertTrue(TemplateLibrary._has_template_history(types.SimpleNamespace(app=app), 'owner-a'))
 
 
 class TemplateMappingPolicyTests(unittest.TestCase):

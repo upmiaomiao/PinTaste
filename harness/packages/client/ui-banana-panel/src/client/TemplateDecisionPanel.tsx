@@ -55,6 +55,8 @@ function TemplateDecisionPanel({useStore,useTemplateLibrary,loadRecommendations,
   const cards=tab==='all'?browser.cards:snapshot.recommended
   const loadAll=(nextCategory=category)=>{scroll.capture();void loadTemplateLibrary({search:query,...(nextCategory?{template_category:nextCategory}:{}),offset:0,limit:TEMPLATE_PAGE_SIZE},'library')}
   const selectCategory=(nextCategory:string)=>{setCategory(nextCategory);loadAll(nextCategory)}
+  // op200: someone who has never confirmed a template starts from the full PPT-template list.
+  useEffect(()=>{if(snapshot.firstTemplate&&tab==='recommended'){setTab('all');setMaterialId(null);loadAll()}},[snapshot.firstTemplate,tab])
   const title=material?.filename??snapshot.detail?.title
   const required=snapshot.detail?.reference_scope==='single_image'||material||['private_generated_design','private_uploaded_template'].includes(snapshot.detail?.preview_kind ?? '')?1:4
   const canConfirm=!!handle&&!!activeId&&!snapshot.busy&&pages.length>=required&&loaded.size>=required
@@ -62,7 +64,7 @@ function TemplateDecisionPanel({useStore,useTemplateLibrary,loadRecommendations,
   return <section ref={scroll.root} onScrollCapture={scroll.onScrollCapture} className={css.root} aria-label={t('templateDecision.title')}>
     <p className={css.intro}>{t('templateDecision.intro')}</p>
     <nav className={css.tabs} aria-label={t('templateDecision.tabs')}>
-      {(['recommended','all','upload']as const).map(value=><button type="button" key={value} aria-pressed={tab===value} onClick={()=>{setTab(value);setMaterialId(null);if(value==='all')loadAll()}}>{t(`templateDecision.${value}`)}</button>)}
+      {(snapshot.firstTemplate?(['all','upload']as const):(['recommended','all','upload']as const)).map(value=><button type="button" key={value} aria-pressed={tab===value} onClick={()=>{setTab(value);setMaterialId(null);if(value==='all')loadAll()}}>{t(`templateDecision.${value}`)}</button>)}
     </nav>
     {(snapshot.actionError||tab==='recommended'&&snapshot.recommendationPhase==='error')?<p className={css.error} role="alert">{t(templateActionMessageKey(snapshot.actionFailure))}<button type="button" disabled={snapshot.busy} onClick={()=>{if(handle)void loadRecommendations(handle)}}>{t('templateAction.refreshTemplate')}</button></p>:null}
     {tab==='upload'?<div className={css.upload}>

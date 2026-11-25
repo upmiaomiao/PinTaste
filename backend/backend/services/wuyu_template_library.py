@@ -1002,7 +1002,9 @@ class TemplateLibrary:
                 items.append(dict(card, recommendation_reason=('适合%s；' % deck_label + reason)
                                   if deck_label and deck_label not in reason else reason))
                 used.add(card['id'])
+            # op200: a person who has never confirmed a template sees the full library first, not 推荐.
             return {'items': items[:4], 'deck_type': deck_type, 'deck_type_label': deck_label,
+                    'first_template': not self._has_template_history(actor.id),
                     'total': len(records), 'minimum_preview_count': 1 if single else 5, 'minimum_body_reference_count': 1 if single else 5, 'facets': VOCABULARY}
 
     def global_options(self):
@@ -1015,6 +1017,36 @@ class TemplateLibrary:
                     and record.get('reference_sufficient') is True
                     and sum(bool(page.get('selected')) for page in record['pages']) >= 4]
         return sorted(rows, key=lambda row: (row['title'], row['id']))
+
+    def _has_template_history(self, owner_id):
+        """Has this person ever confirmed a template (op200)? Unknown counts as yes, keeping today's view.
+
+        Confirmed choices are design events (op195, earlier ones backfilled). Events are not kept while the
+        owner has paused design habits or the habit schema is absent, so then the owner's own workflows
+        are checked for a stored choice (a few most recently updated projects only).
+        """
+        habits = self.app.extensions.get('wuyu_design_habits') if hasattr(self, 'app') else None
+        try:
+            if habits and habits.available:
+                from models.wuyu_design_habits import DesignEvent
+                if DesignEvent.query.filter_by(owner_id=owner_id, kind='template_choice').first() is not None:
+                    return True
+                if not habits.paused(owner_id):
+                    return False
+            from models import Project
+            from models.wuyu_workflow import WuyuWorkflow
+            rows = (WuyuWorkflow.query.join(Project, Project.id == WuyuWorkflow.project_id)
+                    .filter(Project.user_id == owner_id, WuyuWorkflow.body.contains('"template_choice"'))
+                    .order_by(WuyuWorkflow.updated_at.desc()).limit(10).all())
+            for row in rows:
+                try:
+                    if isinstance(json.loads(row.body).get('template_choice'), dict):
+                        return True
+                except (ValueError, AttributeError):
+                    continue
+            return False
+        except Exception:  # never let this hint break recommendations
+            return True
 
     def _choice_history(self, owner_id, deck_type, limit=200):
         """[(template key, count)] of the owner's confirmed choices for this deck type, most used, then latest.

@@ -7272,6 +7272,7 @@ window.__ModuleLoader__.load({
 				if (!object$1(raw) || !Array.isArray(raw.items) || raw.items.length > 4) throw new TemplateRequestError(502);
 				const cards = raw.items.map((item) => parseCard(item, this.previewUrl));
 				if (cards.some((card) => card.review_status !== "approved" || (card.pages?.length ?? 0) < (card.reference_scope === "single_image" || ["private_generated_design", "private_uploaded_template"].includes(card.preview_kind) ? 1 : 4))) throw new TemplateRequestError(502);
+				cards.firstTemplate = raw.first_template === true;
 				return cards;
 			}
 			/** Persist the explicit current template choice; no image-generation action is included. */
@@ -7465,6 +7466,7 @@ window.__ModuleLoader__.load({
 					materials: [],
 					recommendationPhase: "idle",
 					recommended: [],
+					firstTemplate: false,
 					confirmedChoice: null,
 					maxTemplateBytes: 0,
 					templateLimitsStatus: "idle",
@@ -7631,6 +7633,7 @@ window.__ModuleLoader__.load({
 					const cards = await this.dependencies.api.recommend(id);
 					if (!this.disposed && version === this.recommendationVersion) this.state.update((s) => {
 						s.recommended = cards;
+						s.firstTemplate = cards.firstTemplate === true;
 						s.recommendationPhase = "ready";
 						s.detail = cards.find((card) => card.id === s.selected?.id) ?? cards[0] ?? null;
 					});
@@ -8562,6 +8565,13 @@ window.__ModuleLoader__.load({
 				setCategory(nextCategory);
 				loadAll(nextCategory);
 			};
+			(0, react.useEffect)(() => {
+				if (snapshot.firstTemplate && tab === "recommended") {
+					setTab("all");
+					setMaterialId(null);
+					loadAll();
+				}
+			}, [snapshot.firstTemplate, tab]);
 			const title = material?.filename ?? snapshot.detail?.title;
 			const required = snapshot.detail?.reference_scope === "single_image" || material || ["private_generated_design", "private_uploaded_template"].includes(snapshot.detail?.preview_kind ?? "") ? 1 : 4;
 			const canConfirm = !!handle && !!activeId && !snapshot.busy && pages.length >= required && loaded.size >= required;
@@ -8582,11 +8592,11 @@ window.__ModuleLoader__.load({
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("nav", {
 						className: TemplateDecisionPanel_module_css_default.tabs,
 						"aria-label": t("templateDecision.tabs"),
-						children: [
+						children: (snapshot.firstTemplate ? ["all", "upload"] : [
 							"recommended",
 							"all",
 							"upload"
-						].map((value) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+						]).map((value) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
 							type: "button",
 							"aria-pressed": tab === value,
 							onClick: () => {
