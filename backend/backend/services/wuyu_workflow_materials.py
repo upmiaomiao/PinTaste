@@ -79,6 +79,12 @@ class MaterialProcessing:
         public['template_images'] = [{k: v for k, v in image.items() if k != 'relative_path'} |
             {'image_url': f"/api/projects/{project_id}/workflow/artifacts/{image['artifact_id']}"}
             for image in item.get('template_images', [])]
+        # op204: pages the owner removed from an uploaded template stay restorable.
+        removed = item.get('template_images_removed') or []
+        if removed:
+            public['template_images_removed'] = [{k: v for k, v in image.items() if k != 'relative_path'} |
+                {'image_url': f"/api/projects/{project_id}/workflow/artifacts/{image['artifact_id']}"}
+                for image in removed]
         return public
 
     def _public_asset(self, project_id, asset):

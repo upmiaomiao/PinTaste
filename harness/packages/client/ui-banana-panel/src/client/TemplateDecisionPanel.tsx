@@ -13,6 +13,9 @@ export interface TemplateDecisionInjected extends TemplateLibraryChooserInjected
   confirmTemplateChoice(handle:string,choice:{source_id:string}|{material_id:string}):Promise<boolean>
   deleteMaterial(handle: string, materialId: string, revision: number, requestId: string): Promise<import('./template-library.ts').MaterialDeletionResult>
   uploadPrivateTemplate(handle:string,file:File):Promise<void>
+  /** op204: own uploaded PPT/PDF as the template, and representative-page adjustment (conversation panel). */
+  useMaterialAsTemplate(handle:string,materialId:string):Promise<void>
+  setTemplatePages(handle:string,materialId:string,change:{remove?:number[];restore?:number[]}):Promise<void>
 }
 type Props=PropsRuntime<'wuyu.work.templates'>&PropsLocale<'bananaPanel'>&PropsStore<ReturnType<typeof createBananaPanelStore>>&InjectFace<TemplateDecisionInjected>
 const categoryLabels = {

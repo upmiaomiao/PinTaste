@@ -17,7 +17,9 @@ export interface NeutralTemplateCard {
 }
 export interface TemplateFilters { scope?: 'all' | 'mine' | 'public'; purpose?: string; search?: string; visual_style?: string; layout_structure?: string; page_role?: string; information_density?: string; industry_topic?: string; template_category?: string; offset?: number; limit?: number; status?: 'pending' | 'approved' | 'rejected' }
 export interface TemplateList { items: NeutralTemplateCard[]; total: number; facets: TemplateTags }
-export interface TemplateMaterial { id: string; filename: string; ready: boolean; status?:string; pages?: {number: number; image_url:string}[] }
+export interface TemplateMaterial { id: string; filename: string; ready: boolean; status?:string; pages?: {number: number; image_url:string}[]; removedPages?: {number: number; image_url:string}[]; sourceMaterialId?: string|null }
+/** op204: an uploaded content PPT/PDF that can become the owner's template, and the template made from it. */
+export interface TemplateSource { id: string; filename: string; templateMaterialId: string|null }
 export class TemplateRequestError extends Error { constructor(readonly status = 503,readonly failure?:TemplateActionFailure) { super('TEMPLATE_SERVICE_UNAVAILABLE') } }
 const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value)
 const string = (value: unknown, max = 500): value is string => typeof value === 'string' && value.length <= max
@@ -109,6 +111,22 @@ export class TemplateLibraryHttpClient {
     cards.firstTemplate = raw.first_template === true
     return cards
   }
+  /** op204: copy the owner's uploaded content PPT/PDF into a template material (template panel choice only). */
+  async useMaterialAsTemplate(projectId: string, materialId: string): Promise<unknown> {
+    if (!identifier(projectId) || !identifier(materialId)) throw new TemplateRequestError(400)
+    const response = await this.request(this.projectPath(projectId) + '/materials/' + encodeURIComponent(materialId) + '/use-as-template', {method:'POST',credentials:'same-origin',cache:'no-store',redirect:'error',headers:{'Content-Type':'application/json','X-Wuyu-Interaction':'template-from-material'},body:'{}'})
+    const raw:unknown = await response.json().catch(() => null)
+    if (!response.ok || !object(raw) || raw.success !== true || !object(raw.data)) throw new TemplateRequestError(response.status,templateActionFailureFromResponse(raw,response.status,'upload'))
+    return raw.data
+  }
+  /** op204: remove/restore automatically chosen representative pages of an uploaded template. */
+  async setTemplatePages(projectId: string, materialId: string, change: {remove?: number[]; restore?: number[]}): Promise<unknown> {
+    if (!identifier(projectId) || !identifier(materialId)) throw new TemplateRequestError(400)
+    const response = await this.request(this.projectPath(projectId) + '/materials/' + encodeURIComponent(materialId) + '/template-pages', {method:'POST',credentials:'same-origin',cache:'no-store',redirect:'error',headers:{'Content-Type':'application/json','X-Wuyu-Interaction':'template-pages'},body:JSON.stringify({remove:change.remove??[],restore:change.restore??[]})})
+    const raw:unknown = await response.json().catch(() => null)
+    if (!response.ok || !object(raw) || raw.success !== true || !object(raw.data)) throw new TemplateRequestError(response.status,templateActionFailureFromResponse(raw,response.status,'upload'))
+    return raw.data
+  }
   /** Persist the explicit current template choice; no image-generation action is included. */
   async confirm(projectId: string, choice: {source_id: string} | {material_id: string}, revision: number, requestId: string): Promise<unknown> {
     if (!identifier(projectId) || !Number.isSafeInteger(revision) || revision < 0) throw new TemplateRequestError(400)
@@ -166,7 +184,7 @@ export interface TemplateLibrarySnapshot {
   phase: 'idle' | 'loading' | 'ready' | 'error'; items: NeutralTemplateCard[]; total: number; facets: TemplateTags
   filters: TemplateFilters; selected: NeutralTemplateCard | null; detail: NeutralTemplateCard | null
   tab: 'library' | 'mine' | 'review'; admin: boolean; busy: boolean; actionError: boolean; projectId: string | null; materials: TemplateMaterial[]
-  recommendationPhase:'idle'|'loading'|'ready'|'error'; recommended:NeutralTemplateCard[]; firstTemplate?:boolean
+  recommendationPhase:'idle'|'loading'|'ready'|'error'; recommended:NeutralTemplateCard[]; firstTemplate?:boolean; templateSources?:TemplateSource[]
   confirmedChoice:{id:string;title:string;kind:'library'|'upload'}|null; maxTemplateBytes:number
   templateLimitsStatus:'idle'|'loading'|'ready'|'error';actionFailure:TemplateActionFailure|null
 }
@@ -194,7 +212,7 @@ export class TemplateLibraryController {
   private readonly uploadKeys = new WeakMap<File, string>()
   /** @param dependencies - Verified API/identity access and Session-specific persistence. */
   constructor(private readonly dependencies: TemplateLibraryDependencies) {
-    this.state = createSnapshotStore<TemplateLibrarySnapshot>({ phase: 'idle', items: [], total: 0, facets: emptyTags(), filters: {}, selected: null, detail: null, tab: 'library', admin: false, busy: false, actionError: false, projectId: null, materials: [], recommendationPhase:'idle',recommended:[],firstTemplate:false,confirmedChoice:null,maxTemplateBytes:0,templateLimitsStatus:'idle',actionFailure:null })
+    this.state = createSnapshotStore<TemplateLibrarySnapshot>({ phase: 'idle', items: [], total: 0, facets: emptyTags(), filters: {}, selected: null, detail: null, tab: 'library', admin: false, busy: false, actionError: false, projectId: null, materials: [], recommendationPhase:'idle',recommended:[],firstTemplate:false,templateSources:[],confirmedChoice:null,maxTemplateBytes:0,templateLimitsStatus:'idle',actionFailure:null })
   }
   /** Revalidate a saved ID once, without loading the whole library or any model. */
   hydrateOnce(): Promise<void> {
@@ -251,13 +269,16 @@ export class TemplateLibraryController {
       const items: TemplateMaterial[] = raw.materials.filter(m => object(m) && m.role === 'template' && identifier(m.id) && string(m.filename, 300)).map(m => {
         const material = m as Record<string, unknown>
         const pages=Array.isArray(material.template_images)?material.template_images.filter(image=>object(image)&&Number.isSafeInteger(image.number)&&string(image.image_url,8192)&&/^(?:https?:\/\/|\/api\/projects\/)/.test(image.image_url)).map(image=>{const page=image as Record<string,unknown>;return {number:Number(page.number),image_url:page.image_url as string}}):[]
-        return { id: material.id as string, filename: material.filename as string, ready: material.status === 'completed' && pages.length > 0,status:String(material.status||''),pages }
+        const removedPages=Array.isArray(material.template_images_removed)?material.template_images_removed.filter(image=>object(image)&&Number.isSafeInteger(image.number)&&string(image.image_url,8192)&&/^(?:https?:\/\/|\/api\/projects\/)/.test(image.image_url)).map(image=>{const page=image as Record<string,unknown>;return {number:Number(page.number),image_url:page.image_url as string}}):[]
+        return { id: material.id as string, filename: material.filename as string, ready: material.status === 'completed' && pages.length > 0,status:String(material.status||''),pages,removedPages,sourceMaterialId:identifier(material.source_material_id)?material.source_material_id:null }
       })
+      // op204: content PPT/PDF materials the owner can turn into a template, with the template made from each.
+      const templateSources: TemplateSource[] = raw.materials.filter(m => object(m) && m.role === 'material' && m.origin !== 'web_research' && identifier(m.id) && string(m.filename, 300) && /\.(pptx|pdf)$/i.test(m.filename as string)).map(m => ({id:(m as Record<string,unknown>).id as string,filename:(m as Record<string,unknown>).filename as string,templateMaterialId:items.find(item=>item.sourceMaterialId===(m as Record<string,unknown>).id)?.id??null}))
       const limits=object(raw.material_limits)?raw.material_limits:{}
       const valid=Number.isSafeInteger(limits.max_file_bytes)&&Number(limits.max_file_bytes)>0
       if (!this.disposed && version === this.materialVersion){
         this.uploadLimits=valid?{handle,version,projectId:raw.project_id as string,maxBytes:Number(limits.max_file_bytes)}:null
-        this.state.update(s => { if(s.projectId!==raw.project_id)s.confirmedChoice=null;s.materials=items;s.projectId=raw.project_id as string
+        this.state.update(s => { if(s.projectId!==raw.project_id)s.confirmedChoice=null;s.materials=items;s.templateSources=templateSources;s.projectId=raw.project_id as string
           s.templateLimitsStatus=valid?'ready':'error';s.maxTemplateBytes=valid?Number(limits.max_file_bytes):0
           if(!s.actionFailure||valid&&s.actionFailure.code==='TEMPLATE_LIMITS_UNAVAILABLE'){s.actionError=false;s.actionFailure=null}
         })
@@ -307,6 +328,24 @@ export class TemplateLibraryController {
       }
       return result
     } catch { return { ok: false, code: 'MATERIAL_DELETE_UNAVAILABLE' } }
+  }
+  /** op204: use the owner's uploaded content PPT/PDF as their template; parsing then picks representative pages. */
+  useAsTemplate(handle: string, materialId: string): Promise<void> {
+    return this.action(async () => {
+      const raw = await this.dependencies.workflow(handle)
+      if (!object(raw) || !identifier(raw.project_id)) throw new TemplateRequestError(502)
+      await this.dependencies.api.useMaterialAsTemplate(raw.project_id, materialId)
+      await this.materials(handle)
+    }, 'upload')
+  }
+  /** op204: remove or restore representative pages of one uploaded template. */
+  templatePages(handle: string, materialId: string, change: {remove?: number[]; restore?: number[]}): Promise<void> {
+    return this.action(async () => {
+      const raw = await this.dependencies.workflow(handle)
+      if (!object(raw) || !identifier(raw.project_id)) throw new TemplateRequestError(502)
+      await this.dependencies.api.setTemplatePages(raw.project_id, materialId, change)
+      await this.materials(handle)
+    }, 'upload')
   }
   /** Upload only after the user's separate Upload click; file selection itself stays local. */
   uploadTemplate(handle:string,file:File):Promise<void>{

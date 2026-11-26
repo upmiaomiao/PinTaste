@@ -140,6 +140,32 @@ def delete_workflow_material(project_id, material_id):
         expected_revision=data['expected_revision']))
 
 
+@wuyu_workflow_bp.post('/<project_id>/workflow/materials/<material_id>/use-as-template')
+def use_material_as_template(project_id, material_id):
+    """op204: the owner's own uploaded PPT/PDF becomes their template (template panel choice only)."""
+    if request.headers.get('X-Wuyu-Interaction') != 'template-from-material':
+        return error_response('TEMPLATE_CHOICE_UI_REQUIRED', '请在模板面板里选择用自己的 PPT 做模板。', 403)
+    data = request.get_json(silent=True)
+    if data not in (None, {}):
+        return error_response('INVALID_REQUEST', '此操作不接受参数。', 400)
+    from services.wuyu_template_from_material import use_material_as_template as use
+    return _handle(project_id, lambda service: use(service, project_id, material_id, request.current_user.id))
+
+
+@wuyu_workflow_bp.post('/<project_id>/workflow/materials/<material_id>/template-pages')
+def set_template_pages(project_id, material_id):
+    """op204: remove or restore automatically chosen representative pages of an uploaded template."""
+    if request.headers.get('X-Wuyu-Interaction') != 'template-pages':
+        return error_response('TEMPLATE_CHOICE_UI_REQUIRED', '请在模板面板里调整模板页面。', 403)
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not set(data) <= {'remove', 'restore'} or not data \
+            or any(not isinstance(data.get(key, []), list) for key in ('remove', 'restore')):
+        return error_response('INVALID_REQUEST', '请提供要去掉或恢复的页码。', 400)
+    from services.wuyu_template_from_material import set_template_pages as pages
+    return _handle(project_id, lambda service: pages(service, project_id, material_id,
+        data.get('remove', []), data.get('restore', [])))
+
+
 @wuyu_workflow_bp.post('/<project_id>/workflow/provider-test')
 def workflow_provider_test(project_id):
     if getattr(getattr(request, 'current_user', None), 'role', None) != 'admin':

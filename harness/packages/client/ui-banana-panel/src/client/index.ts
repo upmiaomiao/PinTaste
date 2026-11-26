@@ -271,7 +271,7 @@ export function apply(ctx: ClientContext): void {
         loadTemplateMaterials:(handle:string|null)=>controller.materials(handle),submitTemplate:(id:string)=>controller.submit(id),tagTemplate:(id:string)=>controller.tag(id),
         reviewTemplate:(id:string,decision:'approve'|'reject',reason:string,tags?:import('./template-library.ts').TemplateTags)=>controller.review(id,decision,reason,tags),
         loadRecommendations:(handle:string)=>controller.recommendations(handle),
-        uploadPrivateTemplate:(handle:string,file:File)=>controller.uploadTemplate(handle,file),
+        uploadPrivateTemplate:(handle:string,file:File)=>controller.uploadTemplate(handle,file),useMaterialAsTemplate:(handle:string,materialId:string)=>controller.useAsTemplate(handle,materialId),setTemplatePages:(handle:string,materialId:string,change:{remove?:number[];restore?:number[]})=>controller.templatePages(handle,materialId,change),
         deleteMaterial:async(handle:string,materialId:string,revision:number,requestId:string)=>{
           const queue=uploads.get(sessionId)?.controller
           const operation=async()=>{const result=await controller.deleteMaterial(handle,materialId,revision,requestId);if(result.ok)await queue?.reconcileProjectMaterials(handle,result.materials);return result}

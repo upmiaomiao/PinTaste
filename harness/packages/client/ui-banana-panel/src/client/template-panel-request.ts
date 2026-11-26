@@ -53,6 +53,15 @@ export async function templatePanelRequest(handle: string, raw: unknown, api: Te
         typeof request.request_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(request.request_id)) throw new Error('MATERIAL_PANEL_REQUEST_INVALID')
       return api.deleteMaterial(handle, request.material_id, Number(request.expected_revision), request.request_id)
     }
+    case 'use_material_as_template':
+      if (Object.keys(request).some(key => !['operation', 'material_id'].includes(key)) || !id(request.material_id)) throw new Error('TEMPLATE_PANEL_REQUEST_INVALID')
+      await api.useMaterialAsTemplate(handle, request.material_id); break
+    case 'template_pages': {
+      const pageList = (value: unknown): number[] | null => value === undefined ? [] : Array.isArray(value) && value.length <= 24 && value.every(n => Number.isSafeInteger(n) && n > 0 && n < 10000) ? value as number[] : null
+      const remove = pageList(request.remove), restore = pageList(request.restore)
+      if (Object.keys(request).some(key => !['operation', 'material_id', 'remove', 'restore'].includes(key)) || !id(request.material_id) || !remove || !restore || remove.length + restore.length === 0) throw new Error('TEMPLATE_PANEL_REQUEST_INVALID')
+      await api.setTemplatePages(handle, request.material_id, { remove, restore }); break
+    }
     case 'upload':
       if (!(request.file instanceof File)) throw new Error('TEMPLATE_PANEL_REQUEST_INVALID')
       await api.uploadPrivateTemplate(handle, request.file); break

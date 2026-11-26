@@ -7426,6 +7426,30 @@ window.__ModuleLoader__.load({
 				cards.firstTemplate = raw.first_template === true;
 				return cards;
 			}
+			/** op204: copy the owner's uploaded content PPT/PDF into a template material (template panel choice only). */
+			async useMaterialAsTemplate(projectId, materialId) {
+				if (!identifier(projectId) || !identifier(materialId)) throw new TemplateRequestError(400);
+				const response = await this.request(this.projectPath(projectId) + "/materials/" + encodeURIComponent(materialId) + "/use-as-template", {
+					method: "POST", credentials: "same-origin", cache: "no-store", redirect: "error",
+					headers: { "Content-Type": "application/json", "X-Wuyu-Interaction": "template-from-material" },
+					body: "{}"
+				});
+				const raw = await response.json().catch(() => null);
+				if (!response.ok || !object$1(raw) || raw.success !== true || !object$1(raw.data)) throw new TemplateRequestError(response.status, templateActionFailureFromResponse(raw, response.status, "upload"));
+				return raw.data;
+			}
+			/** op204: remove/restore automatically chosen representative pages of an uploaded template. */
+			async setTemplatePages(projectId, materialId, change) {
+				if (!identifier(projectId) || !identifier(materialId)) throw new TemplateRequestError(400);
+				const response = await this.request(this.projectPath(projectId) + "/materials/" + encodeURIComponent(materialId) + "/template-pages", {
+					method: "POST", credentials: "same-origin", cache: "no-store", redirect: "error",
+					headers: { "Content-Type": "application/json", "X-Wuyu-Interaction": "template-pages" },
+					body: JSON.stringify({ remove: change.remove || [], restore: change.restore || [] })
+				});
+				const raw = await response.json().catch(() => null);
+				if (!response.ok || !object$1(raw) || raw.success !== true || !object$1(raw.data)) throw new TemplateRequestError(response.status, templateActionFailureFromResponse(raw, response.status, "upload"));
+				return raw.data;
+			}
 			/** Persist the explicit current template choice; no image-generation action is included. */
 			async confirm(projectId, choice, revision, requestId) {
 				if (!identifier(projectId) || !Number.isSafeInteger(revision) || revision < 0) throw new TemplateRequestError(400);
@@ -7618,6 +7642,7 @@ window.__ModuleLoader__.load({
 					recommendationPhase: "idle",
 					recommended: [],
 					firstTemplate: false,
+					templateSources: [],
 					confirmedChoice: null,
 					maxTemplateBytes: 0,
 					templateLimitsStatus: "idle",
@@ -7728,14 +7753,25 @@ window.__ModuleLoader__.load({
 								image_url: page.image_url
 							};
 						}) : [];
+						const removedPages = Array.isArray(material.template_images_removed) ? material.template_images_removed.filter((image) => object$1(image) && Number.isSafeInteger(image.number) && string(image.image_url, 8192) && /^(?:https?:\/\/|\/api\/projects\/)/.test(image.image_url)).map((image) => ({
+							number: Number(image.number),
+							image_url: image.image_url
+						})) : [];
 						return {
 							id: material.id,
 							filename: material.filename,
 							ready: material.status === "completed" && pages.length > 0,
 							status: String(material.status || ""),
-							pages
+							pages,
+							removedPages,
+							sourceMaterialId: identifier(material.source_material_id) ? material.source_material_id : null
 						};
 					});
+					const templateSources = raw.materials.filter((m) => object$1(m) && m.role === "material" && m.origin !== "web_research" && identifier(m.id) && string(m.filename, 300) && /\.(pptx|pdf)$/i.test(m.filename)).map((m) => ({
+						id: m.id,
+						filename: m.filename,
+						templateMaterialId: (items.find((item) => item.sourceMaterialId === m.id) || {}).id || null
+					}));
 					const limits = object$1(raw.material_limits) ? raw.material_limits : {};
 					const valid = Number.isSafeInteger(limits.max_file_bytes) && Number(limits.max_file_bytes) > 0;
 					if (!this.disposed && version === this.materialVersion) {
@@ -7748,6 +7784,7 @@ window.__ModuleLoader__.load({
 						this.state.update((s) => {
 							if (s.projectId !== raw.project_id) s.confirmedChoice = null;
 							s.materials = items;
+							s.templateSources = templateSources;
 							s.projectId = raw.project_id;
 							s.templateLimitsStatus = valid ? "ready" : "error";
 							s.maxTemplateBytes = valid ? Number(limits.max_file_bytes) : 0;
@@ -7850,6 +7887,24 @@ window.__ModuleLoader__.load({
 						code: "MATERIAL_DELETE_UNAVAILABLE"
 					};
 				}
+			}
+			/** op204: use the owner's uploaded content PPT/PDF as their template; parsing then picks representative pages. */
+			useAsTemplate(handle, materialId) {
+				return this.action(async () => {
+					const raw = await this.dependencies.workflow(handle);
+					if (!object$1(raw) || !identifier(raw.project_id)) throw new TemplateRequestError(502);
+					await this.dependencies.api.useMaterialAsTemplate(raw.project_id, materialId);
+					await this.materials(handle);
+				}, "upload");
+			}
+			/** op204: remove or restore representative pages of one uploaded template. */
+			templatePages(handle, materialId, change) {
+				return this.action(async () => {
+					const raw = await this.dependencies.workflow(handle);
+					if (!object$1(raw) || !identifier(raw.project_id)) throw new TemplateRequestError(502);
+					await this.dependencies.api.setTemplatePages(raw.project_id, materialId, change);
+					await this.materials(handle);
+				}, "upload");
 			}
 			/** Upload only after the user's separate Upload click; file selection itself stays local. */
 			uploadTemplate(handle, file) {
@@ -9126,6 +9181,17 @@ window.__ModuleLoader__.load({
 						"request_id"
 					].includes(key)) || !id(request.material_id) || request.confirmed !== true || !Number.isSafeInteger(request.expected_revision) || Number(request.expected_revision) < 0 || typeof request.request_id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(request.request_id)) throw new Error("MATERIAL_PANEL_REQUEST_INVALID");
 					return api.deleteMaterial(handle, request.material_id, Number(request.expected_revision), request.request_id);
+				case "use_material_as_template":
+					if (Object.keys(request).some((key) => !["operation", "material_id"].includes(key)) || !id(request.material_id)) throw new Error("TEMPLATE_PANEL_REQUEST_INVALID");
+					await api.useMaterialAsTemplate(handle, request.material_id);
+					break;
+				case "template_pages": {
+					const pageList = (value) => value === void 0 ? [] : Array.isArray(value) && value.length <= 24 && value.every((n) => Number.isSafeInteger(n) && n > 0 && n < 10000) ? value : null;
+					const remove = pageList(request.remove), restore = pageList(request.restore);
+					if (Object.keys(request).some((key) => !["operation", "material_id", "remove", "restore"].includes(key)) || !id(request.material_id) || !remove || !restore || remove.length + restore.length === 0) throw new Error("TEMPLATE_PANEL_REQUEST_INVALID");
+					await api.setTemplatePages(handle, request.material_id, { remove, restore });
+					break;
+				}
 				case "upload":
 					if (!(request.file instanceof File)) throw new Error("TEMPLATE_PANEL_REQUEST_INVALID");
 					await api.uploadPrivateTemplate(handle, request.file);
@@ -10344,6 +10410,8 @@ window.__ModuleLoader__.load({
 					reviewTemplate: (id, decision, reason, tags) => controller.review(id, decision, reason, tags),
 					loadRecommendations: (handle) => controller.recommendations(handle),
 					uploadPrivateTemplate: (handle, file) => controller.uploadTemplate(handle, file),
+					useMaterialAsTemplate: (handle, materialId) => controller.useAsTemplate(handle, materialId),
+					setTemplatePages: (handle, materialId, change) => controller.templatePages(handle, materialId, change),
 					deleteMaterial: async (handle, materialId, revision, requestId) => {
 						const queue = uploads.get(sessionId)?.controller;
 						const operation = async () => {
