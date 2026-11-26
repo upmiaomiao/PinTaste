@@ -1,6 +1,7 @@
 """TraceSpec adapter for the project's existing PPTXBuilder/ExportService."""
 import json
 import math
+import os
 import io
 import re
 import unicodedata
@@ -209,7 +210,16 @@ def crop_trace_images(trace, image_path, output_dir, assets, allowed_roots):
                 raise PipelineError('invalid_trace', '图片裁切范围不足1像素。')
             # Always crop the approved full-resolution image. A lossless PNG is
             # embedded at these exact pixels; no thumbnail or resize is involved.
-            source.crop(pixel_box).save(target, format='PNG')
+            cropped = source.crop(pixel_box)
+            # op203: a small graphic's surroundings become transparent when they match the page or the
+            # rebuilt shape beneath it, so the icon does not sit on a coloured square. Only alpha changes.
+            cleared = None
+            if os.getenv('WUYU_TRACE_CLEAR_SMALL_BACKGROUND', '1') != '0':
+                from .wuyu_trace_matting import clear_small_graphic
+                cleared, clear_info = clear_small_graphic(trace, n, cropped, source.size)
+                if cleared is not None:
+                    el['background_cleared'] = clear_info
+            (cleared or cropped).save(target, format='PNG')
             el['image_path'] = str(target)
             el['asset_origin'] = 'exact_raster_crop; no invented_vector'
             el['asset_quality'] = {**image_file_quality(target, el['bounds']),
