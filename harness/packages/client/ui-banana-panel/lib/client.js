@@ -5933,6 +5933,154 @@ window.__ModuleLoader__.load({
 			"root": "CuslYq_root"
 		};
 		//#endregion
+		//#region op201 src/client/WorkOnboarding.tsx (patched in by operations/op201-onboarding/patch_banana_201.py)
+		/** First-run questionnaire + three-step guide on the empty Work page. Answers: GET/PUT /api/design-memory/profile. */
+		const css$op201 = ".op201-links{display:flex;flex-wrap:wrap;gap:4px 14px;margin:-6px 0 14px}.op201-link{border:0;background:none;padding:0;font:inherit;font-size:12px;line-height:20px;color:var(--dsw-alias-label-secondary);cursor:pointer;text-decoration:underline;text-underline-offset:3px}.op201-link:hover{color:var(--dsw-alias-label-primary)}.op201-dialog{box-sizing:border-box;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto;border:0;border-radius:20px;padding:22px 26px 20px;background:var(--dsw-alias-bg-base,#fff);color:var(--dsw-alias-label-primary);box-shadow:0 24px 60px #0003}.op201-dialog::backdrop{background:#0006;backdrop-filter:blur(3px)}.op201-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.op201-step{margin:0;color:var(--dsw-alias-label-secondary);font-size:13px}.op201-x{border:0;background:none;font-size:20px;line-height:1;cursor:pointer;color:var(--dsw-alias-label-secondary);padding:4px 6px;border-radius:8px}.op201-x:hover{background:var(--dsw-alias-interactive-bg-hover)}.op201-progress{display:flex;gap:6px;margin:12px 0 18px}.op201-progress i{flex:1;height:4px;border-radius:4px;background:var(--dsw-alias-border-l2)}.op201-progress i.on{background:var(--dsw-alias-button-primary-fill)}.op201-dialog h2{margin:0 0 6px;font-size:20px;line-height:1.4}.op201-hint{margin:0 0 16px;color:var(--dsw-alias-label-secondary);font-size:13px;line-height:1.6}.op201-options{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:20px}.op201-options button{display:inline-flex;align-items:center;gap:5px;min-height:38px;padding:7px 14px;border:1px solid var(--dsw-alias-border-l2);border-radius:999px;background:var(--dsw-alias-bg-base,#fff);color:inherit;font:inherit;font-size:14px;cursor:pointer}.op201-options button:hover:enabled{border-color:var(--dsw-alias-button-primary-fill)}.op201-options button[aria-pressed=true]{border-color:var(--dsw-alias-button-primary-fill);background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-brand-text);font-weight:600}.op201-options button:disabled{opacity:.45;cursor:not-allowed}.op201-foot{display:flex;align-items:center;justify-content:space-between;gap:12px}.op201-actions{display:flex;align-items:center;gap:10px}.op201-text{border:0;background:none;font:inherit;font-size:14px;color:var(--dsw-alias-label-secondary);cursor:pointer;padding:8px 4px}.op201-primary,.op201-secondary{min-height:38px;padding:0 18px;border-radius:12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}.op201-primary{border:0;background:var(--dsw-alias-button-primary-fill);color:#fff}.op201-primary:hover:enabled{background:var(--dsw-alias-button-primary-hover)}.op201-secondary{border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-base,#fff);color:inherit}.op201-primary:disabled{opacity:.6;cursor:default}.op201-guide{list-style:none;margin:14px 0;padding:0;display:grid;gap:10px}.op201-guide li{display:flex;gap:14px;align-items:flex-start;padding:13px 15px;border:1px solid var(--dsw-alias-border-l2);border-radius:14px;background:var(--dsw-alias-bg-module-platform)}.op201-num{display:grid;place-items:center;flex-shrink:0;width:30px;height:30px;border-radius:9px;background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-brand-text);font-weight:700}.op201-guide strong{display:block;margin-bottom:2px;font-size:15px}.op201-guide p{margin:0;color:var(--dsw-alias-label-secondary);font-size:13px;line-height:1.6}.op201-error{color:#b42318;font-size:13px;margin:0 0 12px}.op201-dialog button:focus-visible{outline:2px solid var(--dsw-alias-label-secondary);outline-offset:3px}@media (max-width:560px){.op201-dialog{padding:18px}.op201-dialog h2{font-size:18px}}";
+		const tagIdOp201 = "@deepseek-ai/dsh-client-ui-banana-panel/op201-onboarding.css";
+		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagIdOp201) + "]") === null) {
+			const tag = document.createElement("style");
+			tag.dataset.plugin = "@deepseek-ai/dsh-client-ui-banana-panel";
+			tag.dataset.pluginCss = tagIdOp201;
+			tag.textContent = css$op201;
+			document.head.appendChild(tag);
+		}
+		// Codes must match backend services/wuyu_user_profile.py and services/wuyu_deck_types.py.
+		const OP201_QUESTIONS = [
+			{ key: "industries", multi: true, title: ["你主要在哪个领域工作？", "Which field do you work in?"], hint: ["最多选 3 个。", "Pick up to 3."], options: [
+				["solid_waste", ["固废与资源循环", "Solid waste & recycling"]], ["environment", ["生态环境", "Environment"]], ["energy", ["能源化工", "Energy & chemicals"]],
+				["engineering", ["工程建设", "Engineering & construction"]], ["research", ["科研院所", "Research institute"]], ["education", ["高校教育", "Higher education"]],
+				["government", ["政府监管", "Government & regulation"]], ["enterprise", ["企业经营", "Business"]], ["other", ["其他", "Other"]]] },
+			{ key: "role", multi: false, title: ["你平时主要做什么？", "What do you mostly do?"], hint: ["选一个最接近的。", "Pick the closest one."], options: [
+				["research", ["做研究、写论文", "Research & papers"]], ["student", ["在读学生", "Student"]], ["engineering", ["技术与工程", "Engineering"]],
+				["management", ["管理与汇报", "Management & reporting"]], ["consulting", ["咨询与方案", "Consulting & proposals"]], ["teaching", ["教学与培训", "Teaching & training"]], ["other", ["其他", "Other"]]] },
+			{ key: "deck_types", multi: true, title: ["你常做哪类 PPT？", "Which presentations do you make most?"], hint: ["最多选 3 个。需求里没写类型时，会按第一个推荐模板。", "Pick up to 3. When a request names no type, templates for the first one are suggested."], options: [
+				["proposal_defense", ["开题答辩", "Proposal defense"]], ["thesis_defense", ["毕业论文答辩", "Thesis defense"]], ["master_defense", ["硕士论文答辩", "Master defense"]],
+				["doctoral_defense", ["博士论文答辩", "PhD defense"]], ["qualifying_exam", ["资格考核", "Qualifying exam"]], ["academic_report", ["学术汇报 / 组会", "Academic talk"]],
+				["grant", ["项目申请", "Grant application"]], ["award", ["成果报奖", "Award application"]], ["technical_proposal", ["技术方案", "Technical proposal"]],
+				["work_report", ["工作汇报", "Work report"]], ["training", ["培训课件", "Training"]], ["company_intro", ["企业介绍", "Company profile"]], ["business_plan", ["商业计划", "Business plan"]]] }
+		];
+		const OP201_GUIDE = [
+			[["说清楚要做什么", "Say what you need"], ["在下面的输入框描述主题、汇报对象和时长，或点一张任务卡开始。", "Describe the topic, audience and length below, or start from a task card."]],
+			[["上传材料、选模板", "Add materials, pick a template"], ["把论文、报告、数据或旧 PPT 拖进来；在右侧面板选一套模板，或上传自己单位的模板。", "Drop in papers, reports, data or an old deck; choose a template in the side panel or upload your own."]],
+			[["确认后生成，逐页修改", "Confirm, generate, refine"], ["先确认大纲和每页内容再出图；任何一页都可以单独提修改意见。", "Approve the outline and pages before images are made; any page can be revised on its own."]]
+		];
+		const OP201_COPY = {
+			welcome: ["欢迎使用！先花 10 秒了解你", "Welcome! 10 seconds to get to know you"], step: ["第 {n} / 3 步", "Step {n} of 3"], picked: ["已选 {n}/3", "{n}/3 selected"],
+			later: ["以后再说", "Later"], back: ["上一步", "Back"], skip: ["跳过此题", "Skip"], next: ["下一步", "Next"], finish: ["完成", "Finish"], close: ["关闭", "Close"],
+			saved: ["已记下你的偏好", "Preferences saved"], guide: ["三步做出一份 PPT", "Three steps to a presentation"], guideNote: ["回答随时可以在这里的「调整使用偏好」里修改。", "You can change your answers any time with “Edit my preferences” on this page."],
+			self: ["我先自己看看", "Let me look around"], start: ["从整套 PPT 开始", "Start a full deck"], failed: ["没有保存成功，可稍后点「调整使用偏好」重新填写。", "Not saved. You can fill it in later with “Edit my preferences”."],
+			edit: ["调整使用偏好", "Edit my preferences"], fill: ["填写使用偏好", "Tell us about your work"], help: ["使用指引", "How it works"]
+		};
+		const OP201_URL = "/agent-api/api/design-memory/profile";
+		let op201Request = null, op201AutoShown = false;
+		function op201Load() {
+			if (!op201Request) op201Request = fetch(OP201_URL, { credentials: "same-origin", cache: "no-store", redirect: "error" })
+				.then((response) => response.ok ? response.json() : null)
+				.then((body) => body && body.success === true && body.data && typeof body.data === "object" ? body.data : { available: false, profile: null })
+				.catch(() => ({ available: false, profile: null }));
+			return op201Request;
+		}
+		function op201Payload(answers, skipped) {
+			if (skipped) return { status: "skipped" };
+			const payload = { status: "done", industries: answers.industries.slice(0, 3), deck_types: answers.deck_types.slice(0, 3) };
+			if (answers.role) payload.role = answers.role;
+			return payload.industries.length || payload.deck_types.length || payload.role ? payload : { status: "skipped" };
+		}
+		function WorkOnboarding({ en, onStart }) {
+			const h = react.createElement;
+			const L = (pair, values) => { let text = pair[en ? 1 : 0]; for (const name in values || {}) text = text.replace("{" + name + "}", String(values[name])); return text; };
+			const empty = { industries: [], role: null, deck_types: [] };
+			const [data, setData] = (0, react.useState)(null), [open, setOpen] = (0, react.useState)(false), [manual, setManual] = (0, react.useState)(false);
+			const [step, setStep] = (0, react.useState)(0), [answers, setAnswers] = (0, react.useState)(empty), [saving, setSaving] = (0, react.useState)(false), [failed, setFailed] = (0, react.useState)(false);
+			const dialog = (0, react.useRef)(null);
+			(0, react.useEffect)(() => {
+				let live = true;
+				op201Load().then((loaded) => {
+					if (!live) return;
+					setData(loaded);
+					if (loaded.available && loaded.profile === null && !op201AutoShown) { op201AutoShown = true; setManual(false); setStep(0); setAnswers(empty); setOpen(true); }
+				});
+				return () => { live = false; };
+			}, []);
+			(0, react.useEffect)(() => {
+				const element = dialog.current;
+				if (!element || typeof element.showModal !== "function") return;
+				if (open && !element.open) element.showModal();
+				if (!open && element.open) element.close();
+			}, [open]);
+			(0, react.useEffect)(() => {
+				if (open) dialog.current?.querySelector("[data-op201-focus]")?.focus();
+			}, [open, step]);
+			if (!data || !data.available) return null;
+			const save = async (skipped) => {
+				setSaving(true); setFailed(false);
+				let ok = false;
+				try {
+					const response = await fetch(OP201_URL, { method: "PUT", credentials: "same-origin", cache: "no-store", redirect: "error", headers: { "Content-Type": "application/json" }, body: JSON.stringify(op201Payload(answers, skipped)) });
+					const body = response.ok ? await response.json() : null;
+					if (body && body.success === true && body.data) { op201Request = Promise.resolve(body.data); setData(body.data); ok = true; }
+				} catch {}
+				setSaving(false); if (!ok) setFailed(true);
+				return ok;
+			};
+			const close = () => { setOpen(false); setManual(false); };
+			const later = async () => { if (saving) return; if (!manual) await save(false); close(); };
+			const next = async () => {
+				if (saving) return;
+				if (step < OP201_QUESTIONS.length - 1) { setStep(step + 1); return; }
+				const ok = await save(false);
+				if (manual && ok) { close(); return; }
+				setStep(OP201_QUESTIONS.length);
+			};
+			const reopen = (guideOnly) => {
+				const saved = data.profile || {};
+				setAnswers({ industries: saved.industries || [], role: saved.role || null, deck_types: saved.deck_types || [] });
+				setManual(true); setFailed(false); setStep(guideOnly ? OP201_QUESTIONS.length : 0); setOpen(true);
+			};
+			const question = OP201_QUESTIONS[step];
+			const value = question ? answers[question.key] : null;
+			const count = question ? (question.multi ? value.length : value ? 1 : 0) : 0;
+			const toggle = (code) => setAnswers((current) => {
+				if (!question.multi) return { ...current, [question.key]: current[question.key] === code ? null : code };
+				const list = current[question.key];
+				if (list.includes(code)) return { ...current, [question.key]: list.filter((item) => item !== code) };
+				return list.length >= 3 ? current : { ...current, [question.key]: [...list, code] };
+			});
+			const body = !open ? null : question ? [
+				h("div", { className: "op201-head", key: "head" }, h("p", { className: "op201-step" }, step === 0 && !manual ? L(OP201_COPY.welcome) : L(OP201_COPY.step, { n: step + 1 })),
+					h("button", { type: "button", className: "op201-x", "aria-label": L(OP201_COPY.close), disabled: saving, onClick: () => void later() }, "×")),
+				h("div", { className: "op201-progress", "aria-hidden": "true", key: "progress" }, OP201_QUESTIONS.map((_, index) => h("i", { key: index, className: index <= step ? "on" : "" }))),
+				h("h2", { id: "op201-title", key: "title" }, L(question.title)),
+				h("p", { className: "op201-hint", key: "hint" }, L(question.hint), question.multi ? " · " + L(OP201_COPY.picked, { n: count }) : ""),
+				h("div", { className: "op201-options", role: "group", "aria-labelledby": "op201-title", key: "options" }, question.options.map(([code, label], index) => {
+					const pressed = question.multi ? value.includes(code) : value === code;
+					return h("button", { type: "button", key: code, "data-op201-focus": index === 0 ? "" : void 0, "aria-pressed": pressed, disabled: saving || question.multi && !pressed && count >= 3, onClick: () => toggle(code) }, pressed ? "✓ " : "", L(label));
+				})),
+				failed ? h("p", { className: "op201-error", role: "alert", key: "error" }, L(OP201_COPY.failed)) : null,
+				h("div", { className: "op201-foot", key: "foot" },
+					step > 0 ? h("button", { type: "button", className: "op201-text", disabled: saving, onClick: () => setStep(step - 1) }, "← " + L(OP201_COPY.back))
+						: h("button", { type: "button", className: "op201-text", disabled: saving, onClick: () => void later() }, L(OP201_COPY.later)),
+					h("span", { className: "op201-actions" },
+						count === 0 ? h("button", { type: "button", className: "op201-text", disabled: saving, onClick: () => void next() }, L(OP201_COPY.skip)) : null,
+						count > 0 ? h("button", { type: "button", className: "op201-primary", disabled: saving, onClick: () => void next() }, (step === OP201_QUESTIONS.length - 1 ? L(OP201_COPY.finish) : L(OP201_COPY.next)) + " →") : null))
+			] : [
+				h("div", { className: "op201-head", key: "head" }, h("p", { className: "op201-step" }, manual ? L(OP201_COPY.guide) : L(OP201_COPY.saved)),
+					h("button", { type: "button", className: "op201-x", "aria-label": L(OP201_COPY.close), onClick: close }, "×")),
+				h("h2", { id: "op201-title", key: "title" }, L(OP201_COPY.guide)),
+				h("ol", { className: "op201-guide", key: "guide" }, OP201_GUIDE.map(([title, text], index) => h("li", { key: index }, h("span", { className: "op201-num", "aria-hidden": "true" }, String(index + 1)), h("div", null, h("strong", null, L(title)), h("p", null, L(text)))))),
+				failed ? h("p", { className: "op201-error", role: "alert", key: "error" }, L(OP201_COPY.failed)) : null,
+				h("p", { className: "op201-hint", key: "note" }, L(OP201_COPY.guideNote)),
+				h("div", { className: "op201-foot", key: "foot" },
+					h("button", { type: "button", className: "op201-secondary", onClick: close }, L(OP201_COPY.self)),
+					h("button", { type: "button", className: "op201-primary", "data-op201-focus": "", onClick: () => { close(); onStart(); } }, L(OP201_COPY.start) + " →"))
+			];
+			return h(react.Fragment, null,
+				h("div", { className: "op201-links" },
+					h("button", { type: "button", className: "op201-link", onClick: () => reopen(false) }, data.profile && data.profile.status === "done" ? L(OP201_COPY.edit) : L(OP201_COPY.fill)),
+					h("button", { type: "button", className: "op201-link", onClick: () => reopen(true) }, L(OP201_COPY.help))),
+				h("dialog", { ref: dialog, className: "op201-dialog", "aria-labelledby": "op201-title", onCancel: (event) => { event.preventDefault(); if (question) void later(); else close(); } }, body));
+		}
+		//#endregion
 		//#region src/client/WorkTaskCards.tsx
 		/** Recommended work prompts only edit the unsent draft. Requirements remain conversation-owned. */
 		const TASKS = [
@@ -5973,6 +6121,9 @@ window.__ModuleLoader__.load({
 				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
 					className: WorkTaskCards_module_css_default.hint,
 					children: t("current.startHint")
+				}), (0, react.createElement)(WorkOnboarding, {
+					en: t("workTasks.label") !== "从一个工作任务开始",
+					onStart: () => choose(t("workTasks.deck.prompt"))
 				}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 					className: WorkTaskCards_module_css_default.grid,
 					children: TASKS.map((task, index) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {

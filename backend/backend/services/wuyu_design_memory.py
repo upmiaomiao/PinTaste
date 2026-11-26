@@ -556,6 +556,9 @@ def init_design_memory(app):
     # Imported here so the habit tables never join the boot-time schema check of an un-migrated database.
     from .wuyu_design_habits import init_design_habits
     init_design_habits(app)
+    # op201: questionnaire answers; same lazy rule (missing table = feature off, boot unaffected).
+    from .wuyu_user_profile import init_user_profiles
+    init_user_profiles(app)
     from .wuyu_personal_templates import PersonalTemplates
     app.extensions['wuyu_personal_templates'] = PersonalTemplates(app)
     if not app.testing and os.getenv('WUYU_MIGRATION_PROCESS') != '1' and not app.config.get('WUYU_DESIGN_SCHEDULER_DISABLED'):

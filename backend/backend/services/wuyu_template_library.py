@@ -933,6 +933,10 @@ class TemplateLibrary:
         from .wuyu_template_recommendations import rank_templates
         from .wuyu_deck_types import effective_deck_type, label, ACADEMIC_CODES
         deck_type = effective_deck_type(brief)
+        if deck_type is None:
+            # op201: the type the owner said they make most often, only when the brief names none.
+            profiles = self.app.extensions.get('wuyu_user_profiles') if hasattr(self, 'app') else None
+            deck_type = profiles.default_deck_type(actor.id) if profiles else None
         deck_label = label(deck_type)
         ranking_brief = dict(brief)
         if deck_type:

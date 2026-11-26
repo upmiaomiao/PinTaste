@@ -57,6 +57,27 @@ def retrieve():
     return handle(lambda service: {'version':1,'rules':service.retrieve(request.current_user.id, payload['query'], include_system=False)['rules']})
 
 
+def profile(action):
+    """op201: the owner's own first-run questionnaire answers (Work welcome page)."""
+    from services.wuyu_user_profile import UserProfileError
+    try:
+        return success_response(action(current_app.extensions['wuyu_user_profiles']))
+    except UserProfileError as exc:
+        return error_response(exc.code, str(exc), exc.status)
+
+
+@wuyu_design_memory_bp.get('/profile')
+@feature_required('work')
+def get_profile():
+    return profile(lambda service: service.get(request.current_user.id))
+
+
+@wuyu_design_memory_bp.put('/profile')
+@feature_required('work')
+def save_profile():
+    return profile(lambda service: service.save(request.current_user.id, request.get_json(silent=True)))
+
+
 def habits(action):
     return handle(lambda _: action(current_app.extensions['wuyu_design_habits']))
 

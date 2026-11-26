@@ -4,6 +4,7 @@ import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import { isGenerationWorkSession } from './generation-settings.ts'
 import css from './WorkTaskCards.module.css'
+import { WorkOnboarding } from './WorkOnboarding.tsx'
 
 type Props = PropsRuntime<'conversation.hero.suggestions'> & PropsLocale<'bananaPanel'>
 const TASKS = ['deck', 'pages', 'figure'] as const
@@ -35,6 +36,8 @@ export function WorkTaskCards({ sessionId, useSessions, useInput, inputActions, 
   }
   return <section ref={root} className={css.root} aria-label={t('workTasks.label')}>
     <p className={css.hint}>{t('current.startHint')}</p>
+    {/* op201: first-run questionnaire + guide; English when the locale's own label is English. */}
+    <WorkOnboarding en={t('workTasks.label') !== '从一个工作任务开始'} onStart={() => choose(t('workTasks.deck.prompt'))} />
     <div className={css.grid}>{TASKS.map((task, index) => <button type="button" key={task}
       className={css.card} disabled={!available && (editing || onRequestWorkspace === undefined)}
       onClick={() => choose(t(`workTasks.${task}.prompt`))}>
