@@ -21,7 +21,8 @@ from aiohttp import ClientError, ClientSession, ClientTimeout, TCPConnector, web
 
 
 ALLOWED_MODELS = frozenset({'deepseek-v4.1-flash', 'gpt-image-2.5-sunburst-ssvip',
-    'gemini-nano-banana-2.1', 'gpt-6.1-sol', 'gemini-4-argon','gemini-4-argon-ssvip'})
+    'gemini-nano-banana-2.1', 'gpt-6.1-sol', 'gpt-6.2-sol', 'gemini-4-argon','gemini-4-argon-ssvip'})
+# op202: tracing moved to gpt-6.2-sol; gpt-6.1-sol stays allowed so the backend can be switched back.
 GEMINI_WRITING_MODELS=frozenset({'gemini-4-argon','gemini-4-argon-ssvip'})
 UPSTREAM_ORIGIN = 'https://www.dmxapi.cn'
 WEB_TOOL_PATHS = frozenset({'/v1/tools/search', '/v1/tools/fetch'})

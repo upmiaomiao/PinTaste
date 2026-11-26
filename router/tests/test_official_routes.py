@@ -103,7 +103,7 @@ class OfficialRouteTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_other_models_stay_on_dmx_with_dmx_key(self):
         await self.start(lambda request: web.json_response({}))
-        for model in ['gemini-4-argon', 'gpt-6.1-sol']:
+        for model in ['gemini-4-argon', 'gpt-6.1-sol', 'gpt-6.2-sol']:
             status, _ = await self.post('/v1/chat/completions', json={'model': model, 'messages': []})
             self.assertEqual(status, 200)
             route, _, auth, body = self.seen[-1]
